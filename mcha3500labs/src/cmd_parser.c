@@ -19,6 +19,8 @@ typedef struct
 // Forward declaration for built-in commands
 static void _help(int, char *[]);
 static void _reset(int, char *[]);
+static void _cmd_leftEncoderLog(int argc, char *argv[]);
+static void _cmd_rightEncoderLog(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -34,12 +36,34 @@ static CMD_T cmd_table[] =
     {heartbeat_cmd      , "heartbeat"   , "[start|stop]"              , "Get status or start/stop heartbeat task"} ,
     {pot_logging_start      , "potLogData"   , ""              , "Get current voltage at potentiometer."} ,
     {imu_logging_start      , "imuLogData"   , ""              , "Get time,acc_angle,gyro_angle_velo,pot_voltage."} ,
+    {_cmd_leftEncoderLog    , "leftEncoderLog", ""             , "Log left motor encoder count for 3 seconds."} ,
+    {_cmd_rightEncoderLog   , "rightEncoderLog", ""            , "Log right motor encoder count for 3 seconds."} ,
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
 
 // Command function definitions
+
+static void _cmd_leftEncoderLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: leftEncoderLog\n");
+        return;
+    }
+    left_encoder_logging_start();
+}
+
+static void _cmd_rightEncoderLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: rightEncoderLog\n");
+        return;
+    }
+    right_encoder_logging_start();
+}
 
 static void _cmd_updateControl(int argc, char *argv[])
 {

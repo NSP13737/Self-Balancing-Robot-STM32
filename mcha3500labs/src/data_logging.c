@@ -8,10 +8,12 @@
 #include "cmsis_os2.h"
 #include "data_logging.h"
 #include "IMU.h"
+#include "motor.h"
 
 uint16_t logCount;
 
-#define TIMER_PERIOD_MS (1000.0f/200.0f) // Since the osTim runs at 1kHz, we do this to get 200Hz
+#define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
+#define MOTOR_LOG_DURATION_SECONDS 3U
 /* Variable Declarations */
 static void (*log_function)(void);
 int _is_init = 0;
@@ -20,6 +22,8 @@ osTimerId_t osTim_dataLogging;
 /* Function Declarations */
 static void log_pointer(void *argument); // The param (void *argument) is required by FreeRTOS for timer callback
 static void pot_log_data(void);
+static void encoder_log_data(void);
+static int32_t (*encoder_read)(void);
 void logging_start(void *log_function_ptr);
 
 static void pot_log_data(void) {
@@ -48,6 +52,15 @@ static void imu_log_data(void) {
         logging_stop();
     }
     printf("\n");
+}
+
+static void encoder_log_data(void) {
+    float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * logCount;
+    printf("%f,%" PRId32 "\n", relative_time, encoder_read());
+    logCount++;
+    if (logCount >= (MOTOR_LOG_DURATION_SECONDS * 1000U / TIMER_PERIOD_MS)) {
+        logging_stop();
+    }
 }
 
 
@@ -80,7 +93,7 @@ void logging_start(void *log_function_ptr) {
 
     logCount = 0;
     if (osTim_dataLogging != NULL) {
-        osTimerStart(osTim_dataLogging, TIMER_PERIOD_MS);
+        osTimerStart(osTim_dataLogging, (uint32_t)TIMER_PERIOD_MS);
     }
     else {
         //is there a good way to flag this somehow?
@@ -97,6 +110,16 @@ void pot_logging_start(void) {
 void imu_logging_start(void) {
 
     logging_start(&imu_log_data);
+}
+
+void left_encoder_logging_start(void) {
+    encoder_read = left_motor_encoder_getValue;
+    logging_start(&encoder_log_data);
+}
+
+void right_encoder_logging_start(void) {
+    encoder_read = right_motor_encoder_getValue;
+    logging_start(&encoder_log_data);
 }
 
 void logging_stop(void) {
