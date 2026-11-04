@@ -4,10 +4,16 @@
 #include <stdint.h>
 
 
-void motor_PWM_init(void);
-void motor_encoder_init(void);
-void EXTI0_IRQHandler(void);
-void EXTI1_IRQHandler(void);
-int32_t motor_encoder_getValue(void);
+void left_motor_PWM_init(void);
+void left_motor_encoder_init(void);
+void EXTI4_IRQHandler(void);
+void EXTI5_IRQHandler(void);
+int32_t left_motor_encoder_getValue(void);
+
+void right_motor_PWM_init(void);
+void right_motor_encoder_init(void);
+void EXTI10_IRQHandler(void);
+void EXTI8_IRQHandler(void);
+int32_t right_motor_encoder_getValue(void);
 
 #endif

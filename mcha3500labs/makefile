@@ -50,8 +50,7 @@ SRC_STM = \
 	$(SRCDIR)/motor.c \
 	$(SRCDIR)/data_logging.c \
 	$(SRCDIR)/IMU.c \
-	$(SRCDIR)/controller.c 
-
+	$(SRCDIR)/controller.c \
 	$(SRCDIR)/qpas_sub_noblas.c
 
 SRC_MPU6050LIB = \

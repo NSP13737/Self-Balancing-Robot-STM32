@@ -27,8 +27,10 @@ int main(void)
     // Initialise hardware modules
     uart_init();
     pendulum_init();
-    motor_PWM_init();
-    motor_encoder_init();
+    left_motor_PWM_init();
+    right_motor_PWM_init();
+    left_motor_encoder_init();
+    right_motor_encoder_init();
     logging_init();
     IMU_init();
     ctrl_init();

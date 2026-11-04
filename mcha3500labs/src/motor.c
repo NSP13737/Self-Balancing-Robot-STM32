@@ -7,7 +7,9 @@ static uint8_t _is_init = 0;
 
 static TIM_HandleTypeDef htim3;
 
-void motor_PWM_init(void) {
+//TODO: configure for left motor
+void left_motor_PWM_init(void) {
+    // uses pa6 and tim_channel_1
     if (_is_init) {
         return;
     } 
@@ -47,52 +49,156 @@ void motor_PWM_init(void) {
     HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
 }
 
+//TODO: configure for right motor
+void right_motor_PWM_init(void) {
+    // uses pa7 and tim_channel_2
+    if (_is_init) {
+        return;
+    } 
+    _is_init = 1;
 
-void motor_encoder_init(void) {
-    __GPIOC_CLK_ENABLE();
+    __TIM3_CLK_ENABLE();
+    __GPIOA_CLK_ENABLE();
 
-    //init both 0 and 1 (PC0 PC1)
+    // configure pins in AF mode
     GPIO_InitTypeDef gpio_config;
-    gpio_config.Pin = GPIO_PIN_0 | GPIO_PIN_1;
-    gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
+    gpio_config.Pin = GPIO_PIN_7;
+    gpio_config.Mode = GPIO_MODE_AF_PP;
     gpio_config.Pull = GPIO_NOPULL;
-    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOC,&gpio_config);
+    gpio_config.Speed = GPIO_SPEED_FREQ_LOW;
+    gpio_config.Alternate = GPIO_AF2_TIM3;
+    HAL_GPIO_Init(GPIOA,&gpio_config);
 
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 0x0f, 0x0f); // set to lowest priority
-    HAL_NVIC_SetPriority(EXTI1_IRQn, 0x0f, 0x0f);
+    // Set up timer in PWM mode
+    htim3.Instance = TIM3;
+    htim3.Init.Prescaler = TIM_CLOCKPRESCALER_DIV1;
+    htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+    // \frac{\left(180\cdot10^{6}\right)}{10\cdot10^{3}}-1
+    htim3.Init.Period = 9999;
+    htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    HAL_TIM_PWM_Init(&htim3);
 
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+    // config timer more
+    TIM_OC_InitTypeDef tim3_PWM;
+    tim3_PWM.OCMode = TIM_OCMODE_PWM1;
+    tim3_PWM.Pulse = 0;
+    tim3_PWM.OCPolarity = TIM_OCPOLARITY_HIGH;
+    tim3_PWM.OCFastMode = TIM_OCFAST_DISABLE;
+    HAL_TIM_PWM_ConfigChannel(&htim3, &tim3_PWM, TIM_CHANNEL_2);
+
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 2500);
+
+    HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
 }
 
-static volatile int32_t encoder_count = 0;
+void left_motor_encoder_init(void) {
+    //config for pb4 and pb5
+    __GPIOB_CLK_ENABLE();
 
-void EXTI0_IRQHandler(void) {    
+    GPIO_InitTypeDef gpio_config;
+    gpio_config.Pin = GPIO_PIN_4 | GPIO_PIN_5;
+    gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
+    gpio_config.Pull = GPIO_NOPULL; // motor encoder has built in pull up
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB,&gpio_config);
 
-    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1)) {
-        encoder_count--;
+    HAL_NVIC_SetPriority(EXTI4_IRQn, 0x0f, 0x0f); // set to lowest priority
+    HAL_NVIC_SetPriority(EXTI5_IRQn, 0x0f, 0x0f);
+
+    HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI5_IRQn);
+}
+
+void right_motor_encoder_init(void) {
+    //config for pb10 and pa8
+
+    //setup pb10 first
+    __GPIOB_CLK_ENABLE();
+    GPIO_InitTypeDef gpio_config;
+    gpio_config.Pin = GPIO_PIN_10;
+    gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
+    gpio_config.Pull = GPIO_NOPULL; // motor encoder has built in pull up
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB,&gpio_config);
+
+    //setup pa8 second
+    __GPIOA_CLK_ENABLE();
+    GPIO_InitTypeDef gpio_config;
+    gpio_config.Pin = GPIO_PIN_8;
+    gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
+    gpio_config.Pull = GPIO_NOPULL; // motor encoder has built in pull up
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOA,&gpio_config);
+
+
+    HAL_NVIC_SetPriority(EXTI10_IRQn, 0x0f, 0x0f); // set to lowest priority
+    HAL_NVIC_SetPriority(EXTI8_IRQn, 0x0f, 0x0f);
+
+    HAL_NVIC_EnableIRQ(EXTI10_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI8_IRQn);
+}
+
+static volatile int32_t left_encoder_count = 0;
+static volatile int32_t right_encoder_count = 0;
+
+/* IRQs for left motor */
+void EXTI4_IRQHandler(void) {    
+
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
+        left_encoder_count--;
     }
     else {
-        encoder_count++;
+        left_encoder_count++;
     }
 
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 }
 
-void EXTI1_IRQHandler(void) {
+void EXTI5_IRQHandler(void) {
     
 
-    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1) == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0)) {
+    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_5) == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4)) {
         encoder_count++;
     }
     else {
         encoder_count--;
     }
 
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
 }
 
-int32_t motor_encoder_getValue(void) {
-    return encoder_count;
+
+/* IRQs for right motor */
+
+void EXTI10_IRQHandler(void) {    
+
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) == HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
+        right_encoder_count--;
+    }
+    else {
+        right_encoder_count++;
+    }
+
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
+}
+
+void EXTI8_IRQHandler(void) {
+    
+
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10)) {
+        right_encoder_count++;
+    }
+    else {
+        right_encoder_count--;
+    }
+
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
+}
+
+int32_t left_motor_encoder_getValue(void) {
+    return left_encoder_count;
+}
+
+int32_t right_motor_encoder_getValue(void) {
+    return right_encoder_count;
 }
