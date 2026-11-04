@@ -102,19 +102,19 @@ void left_motor_encoder_init(void) {
     gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(GPIOB,&gpio_config);
 
-    HAL_NVIC_SetPriority(EXTI4_IRQn, 0x0f, 0x0f); // set to lowest priority
-    HAL_NVIC_SetPriority(EXTI5_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI4_IRQn, 0x0f, 0); // set to lowest priority
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0x0f, 0x0f);
 
     HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI5_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 void right_motor_encoder_init(void) {
     //config for pb10 and pa8
+    GPIO_InitTypeDef gpio_config;
 
     //setup pb10 first
     __GPIOB_CLK_ENABLE();
-    GPIO_InitTypeDef gpio_config;
     gpio_config.Pin = GPIO_PIN_10;
     gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
     gpio_config.Pull = GPIO_NOPULL; // motor encoder has built in pull up
@@ -123,7 +123,6 @@ void right_motor_encoder_init(void) {
 
     //setup pa8 second
     __GPIOA_CLK_ENABLE();
-    GPIO_InitTypeDef gpio_config;
     gpio_config.Pin = GPIO_PIN_8;
     gpio_config.Mode = GPIO_MODE_IT_RISING_FALLING;
     gpio_config.Pull = GPIO_NOPULL; // motor encoder has built in pull up
@@ -131,68 +130,29 @@ void right_motor_encoder_init(void) {
     HAL_GPIO_Init(GPIOA,&gpio_config);
 
 
-    HAL_NVIC_SetPriority(EXTI10_IRQn, 0x0f, 0x0f); // set to lowest priority
-    HAL_NVIC_SetPriority(EXTI8_IRQn, 0x0f, 0x0f);
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0x0f, 0);
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0x0f, 0x0f); // set to lowest priority
 
-    HAL_NVIC_EnableIRQ(EXTI10_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI8_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 static volatile int32_t left_encoder_count = 0;
 static volatile int32_t right_encoder_count = 0;
 
 /* IRQs for left motor */
-void EXTI4_IRQHandler(void) {    
-
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
-        left_encoder_count--;
-    }
-    else {
-        left_encoder_count++;
-    }
-
+void EXTI4_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
 }
 
-void EXTI5_IRQHandler(void) {
-    
-
-    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_5) == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4)) {
-        encoder_count++;
-    }
-    else {
-        encoder_count--;
-    }
-
+void EXTI9_5_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
 }
-
 
 /* IRQs for right motor */
-
-void EXTI10_IRQHandler(void) {    
-
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) == HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
-        right_encoder_count--;
-    }
-    else {
-        right_encoder_count++;
-    }
-
+void EXTI15_10_IRQHandler(void) {
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
-}
-
-void EXTI8_IRQHandler(void) {
-    
-
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8) == HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10)) {
-        right_encoder_count++;
-    }
-    else {
-        right_encoder_count--;
-    }
-
-    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
 }
 
 int32_t left_motor_encoder_getValue(void) {
@@ -201,4 +161,36 @@ int32_t left_motor_encoder_getValue(void) {
 
 int32_t right_motor_encoder_getValue(void) {
     return right_encoder_count;
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    if (GPIO_Pin == GPIO_PIN_4) {
+        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) ==
+            HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
+            left_encoder_count--;
+        } else {
+            left_encoder_count++;
+        }
+    } else if (GPIO_Pin == GPIO_PIN_5) {
+        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) ==
+            HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
+            left_encoder_count++;
+        } else {
+            left_encoder_count--;
+        }
+    } else if (GPIO_Pin == GPIO_PIN_10) {
+        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) ==
+            HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
+            right_encoder_count--;
+        } else {
+            right_encoder_count++;
+        }
+    } else if (GPIO_Pin == GPIO_PIN_8) {
+        if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) ==
+            HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
+            right_encoder_count++;
+        } else {
+            right_encoder_count--;
+        }
+    }
 }
