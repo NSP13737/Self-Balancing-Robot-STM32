@@ -167,29 +167,33 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == GPIO_PIN_4) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) ==
             HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
-            left_encoder_count--;
-        } else {
             left_encoder_count++;
+        } else {
+            left_encoder_count--;
         }
     } else if (GPIO_Pin == GPIO_PIN_5) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) ==
             HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_5)) {
-            left_encoder_count++;
-        } else {
             left_encoder_count--;
+        } else {
+            left_encoder_count++;
         }
-    } else if (GPIO_Pin == GPIO_PIN_10) {
+    } 
+    else if (GPIO_Pin == GPIO_PIN_10) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) ==
             HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
             right_encoder_count--;
-        } else {
+        } 
+        else {
             right_encoder_count++;
         }
-    } else if (GPIO_Pin == GPIO_PIN_8) {
+    } 
+    else if (GPIO_Pin == GPIO_PIN_8) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_10) ==
             HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_8)) {
             right_encoder_count++;
-        } else {
+        } 
+        else {
             right_encoder_count--;
         }
     }
