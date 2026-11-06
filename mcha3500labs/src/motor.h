@@ -3,14 +3,35 @@
 
 #include <stdint.h>
 
+// motor.h
+typedef enum {
+    MOTOR_LEFT,
+    MOTOR_RIGHT
+} Motor;
+
+typedef enum {
+    MOTOR_DIR_FWD,
+    MOTOR_DIR_BWD,
+    MOTOR_DIR_NODIR
+} MotorDirection;
+
+void motor_set_direction(Motor motor, MotorDirection direction);
 
 void left_motor_PWM_init(void);
+void left_motor_direction_init(void);
+void left_motor_fwd_en(void);
+void left_motor_bwd_en(void);
+void left_motor_no_dir(void);
 void left_motor_encoder_init(void);
 void EXTI4_IRQHandler(void);
 void EXTI9_5_IRQHandler(void);
 int32_t left_motor_encoder_getValue(void);
 
 void right_motor_PWM_init(void);
+void right_motor_direction_init(void);
+void right_motor_fwd_en(void);
+void right_motor_bwd_en(void);
+void right_motor_no_dir(void);
 void right_motor_encoder_init(void);
 void EXTI15_10_IRQHandler(void);
 int32_t right_motor_encoder_getValue(void);

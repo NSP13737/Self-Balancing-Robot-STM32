@@ -93,6 +93,84 @@ void right_motor_PWM_init(void) {
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 2500);
 
     HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_2);
+
+    right_motor_direction_init();
+    right_motor_no_dir();
+}
+
+void left_motor_direction_init(void) {
+    // Set up PC7 and PB6 (IN1 / IN2) to be outputs
+    __GPIOC_CLK_ENABLE();
+
+    GPIO_InitTypeDef gpio_config;
+    gpio_config.Pin = GPIO_PIN_7;
+    gpio_config.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_config.Pull = GPIO_NOPULL;
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOC,&gpio_config);
+
+    __GPIOB_CLK_ENABLE();
+
+    gpio_config.Pin = GPIO_PIN_6;
+    gpio_config.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_config.Pull = GPIO_NOPULL;
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB,&gpio_config);
+}
+
+void right_motor_direction_init(void) {
+    // Set up PC8 and PC9 (IN3 / IN4) to be outputs
+    __GPIOC_CLK_ENABLE();
+
+    GPIO_InitTypeDef gpio_config;
+    gpio_config.Pin = GPIO_PIN_8 | GPIO_PIN_9;
+    gpio_config.Mode = GPIO_MODE_OUTPUT_PP;
+    gpio_config.Pull = GPIO_NOPULL;
+    gpio_config.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOC,&gpio_config);
+}
+
+void motor_set_direction(Motor motor, MotorDirection direction)
+{
+    if (motor == MOTOR_LEFT) {
+        switch (direction) {
+        case MOTOR_DIR_FWD:   left_motor_fwd_en(); break;
+        case MOTOR_DIR_BWD:   left_motor_bwd_en(); break;
+        case MOTOR_DIR_NODIR: left_motor_no_dir(); break;
+        }
+    } else if (motor == MOTOR_RIGHT) {
+        switch (direction) {
+        case MOTOR_DIR_FWD:   right_motor_fwd_en(); break;
+        case MOTOR_DIR_BWD:   right_motor_bwd_en(); break;
+        case MOTOR_DIR_NODIR: right_motor_no_dir(); break;
+        }
+    }
+}
+
+void left_motor_fwd_en(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+}
+void left_motor_bwd_en(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+}
+void left_motor_no_dir(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+}
+
+void right_motor_fwd_en(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+}
+void right_motor_bwd_en(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+}
+void right_motor_no_dir(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 }
 
 void left_motor_encoder_init(void) {

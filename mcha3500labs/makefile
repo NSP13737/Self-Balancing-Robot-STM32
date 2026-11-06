@@ -48,6 +48,7 @@ SRC_STM = \
 	$(SRCDIR)/dummy_task.c \
 	$(SRCDIR)/pendulum.c \
 	$(SRCDIR)/motor.c \
+	$(SRCDIR)/motor_cmds.c \
 	$(SRCDIR)/data_logging.c \
 	$(SRCDIR)/IMU.c \
 	$(SRCDIR)/controller.c \

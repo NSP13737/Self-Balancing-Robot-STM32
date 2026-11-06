@@ -6,6 +6,7 @@
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
+#include "motor.h"
 
 // Type for each command table entry
 typedef struct
@@ -25,6 +26,7 @@ static void _cmd_rightEncoderLog(int argc, char *argv[]);
 // Modules that provide commands
 #include "heartbeat_cmd.h"
 #include "data_logging.h"
+#include "motor_cmds.h"
 #include "controller.h"
 static void _cmd_updateControl(int argc, char *argv[]);
 
@@ -38,6 +40,7 @@ static CMD_T cmd_table[] =
     {imu_logging_start      , "imuLogData"   , ""              , "Get time,acc_angle,gyro_angle_velo,pot_voltage."} ,
     {_cmd_leftEncoderLog    , "leftEncoderLog", ""             , "Log left motor encoder count for 3 seconds."} ,
     {_cmd_rightEncoderLog   , "rightEncoderLog", ""            , "Log right motor encoder count for 3 seconds."} ,
+    {motorDir          , "motorDir"       , "[left|right] [FWD|BWD|NODIR]", "Sets INX pins for motor direction."},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
