@@ -3,17 +3,18 @@
 #include "cmsis_os2.h"
 #include <stdio.h>
 
-static uint8_t _is_init = 0;
+static uint8_t _left_motor_is_init = 0;
+static uint8_t _right_motor_is_init = 0;
 
 static TIM_HandleTypeDef htim3;
 
 //TODO: configure for left motor
 void left_motor_PWM_init(void) {
     // uses pa6 and tim_channel_1
-    if (_is_init) {
+    if (_left_motor_is_init) {
         return;
     } 
-    _is_init = 1;
+    _left_motor_is_init = 1;
 
     __TIM3_CLK_ENABLE();
     __GPIOA_CLK_ENABLE();
@@ -47,15 +48,18 @@ void left_motor_PWM_init(void) {
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 2500);
 
     HAL_TIM_PWM_Start(&htim3,TIM_CHANNEL_1);
+
+    left_motor_direction_init();
+    left_motor_no_dir();
 }
 
 //TODO: configure for right motor
 void right_motor_PWM_init(void) {
     // uses pa7 and tim_channel_2
-    if (_is_init) {
+    if (_right_motor_is_init) {
         return;
     } 
-    _is_init = 1;
+    _right_motor_is_init = 1;
 
     __TIM3_CLK_ENABLE();
     __GPIOA_CLK_ENABLE();
