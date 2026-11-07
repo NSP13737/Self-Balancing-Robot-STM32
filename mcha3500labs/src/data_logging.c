@@ -6,6 +6,7 @@
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "current_sens.h"
 #include "batt_voltage.h"
+#include "extra_pin.h"
 #include "cmsis_os2.h"
 #include "data_logging.h"
 #include "IMU.h"
@@ -14,7 +15,7 @@
 #define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
 #define MOTOR_LOG_DURATION_SECONDS 3U
 #define VELOCITY_LOG_DURATION_SECONDS 5U
-#define MOTOR_SINE_LOG_DURATION_SECONDS 10U
+#define MOTOR_SINE_LOG_DURATION_SECONDS 20U
 
 uint16_t logCount;
 
@@ -119,8 +120,10 @@ static void motor_sine_log_data(void) {
     float current = (sine_log_motor == MOTOR_LEFT) ? left_current_read() : right_current_read();
     float velocity = (sine_log_motor == MOTOR_LEFT) ?
                      left_motor_velocity_rad_s() : right_motor_velocity_rad_s();
+    float pc3_pin_voltage = extra_pin_read();
+    float torque = 0.3577f * (pc3_pin_voltage - 1.6337f);
 
-    printf("%f,%f,%f,%f\n", time_seconds, voltage, current, velocity);
+    printf("%f,%f,%f,%f,%f\n", time_seconds, voltage, current, velocity, torque);
     logCount++;
     if (logCount >= (MOTOR_SINE_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
