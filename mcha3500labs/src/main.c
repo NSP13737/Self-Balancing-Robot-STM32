@@ -7,7 +7,7 @@
 #include "cmd_task.h"
 #include "heartbeat_task.h"
 #include "dummy_task.h"
-#include "pendulum.h"
+#include "current_sens.h"
 #include "motor.h"
 #include "data_logging.h"
 #include "IMU.h"
@@ -26,7 +26,7 @@ int main(void)
 
     // Initialise hardware modules
     uart_init();
-    pendulum_init();
+    current_sense_init();
     left_motor_PWM_init();
     right_motor_PWM_init();
     left_motor_encoder_init();

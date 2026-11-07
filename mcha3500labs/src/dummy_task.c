@@ -5,7 +5,6 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "uart.h"
-#include "pendulum.h"
 #include "motor.h"
 #include "IMU.h"
 
