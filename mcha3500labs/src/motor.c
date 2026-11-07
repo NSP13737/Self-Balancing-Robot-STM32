@@ -1,6 +1,7 @@
 #include "motor.h"
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
+#include "batt_voltage.h"
 #include <stdio.h>
 
 #define MOTOR_VELOCITY_SAMPLE_MS 5U
@@ -11,6 +12,10 @@ static uint8_t _left_motor_is_init = 0;
 static uint8_t _right_motor_is_init = 0;
 
 static TIM_HandleTypeDef htim3;
+static volatile int left_motor_dc_percent = 0;
+static volatile int right_motor_dc_percent = 0;
+static volatile MotorDirection left_motor_direction = MOTOR_DIR_NODIR;
+static volatile MotorDirection right_motor_direction = MOTOR_DIR_NODIR;
 
 static uint32_t motor_dc_to_compare(int percent_dc);
 
@@ -143,11 +148,39 @@ static uint32_t motor_dc_to_compare(int percent_dc) {
 }
 
 void setLeftMotorDC(int percent_dc) {
+    if (percent_dc < 0) percent_dc = 0;
+    if (percent_dc > 100) percent_dc = 100;
+    left_motor_dc_percent = percent_dc;
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, motor_dc_to_compare(percent_dc));
 }
 
 void setRightMotorDC(int percent_dc) {
+    if (percent_dc < 0) percent_dc = 0;
+    if (percent_dc > 100) percent_dc = 100;
+    right_motor_dc_percent = percent_dc;
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, motor_dc_to_compare(percent_dc));
+}
+
+int motor_get_dc(Motor motor)
+{
+    if (motor == MOTOR_LEFT) return left_motor_dc_percent;
+    if (motor == MOTOR_RIGHT) return right_motor_dc_percent;
+    return 0;
+}
+
+float motor_get_voltage(Motor motor)
+{
+    int dc = motor_get_dc(motor);
+    MotorDirection direction;
+
+    if (motor == MOTOR_LEFT) direction = left_motor_direction;
+    else if (motor == MOTOR_RIGHT) direction = right_motor_direction;
+    else return 0.0f;
+
+    if (direction == MOTOR_DIR_NODIR) return 0.0f;
+
+    float signed_dc = (direction == MOTOR_DIR_BWD) ? -(float)dc : (float)dc;
+    return batt_voltage_read() * signed_dc / 100.0f;
 }
 
 /* MOTOR DIRECTION CONTROL */
@@ -187,12 +220,14 @@ void right_motor_direction_init(void) {
 void motor_set_direction(Motor motor, MotorDirection direction)
 {
     if (motor == MOTOR_LEFT) {
+        left_motor_direction = direction;
         switch (direction) {
         case MOTOR_DIR_FWD:   left_motor_fwd_en(); break;
         case MOTOR_DIR_BWD:   left_motor_bwd_en(); break;
         case MOTOR_DIR_NODIR: left_motor_no_dir(); break;
         }
     } else if (motor == MOTOR_RIGHT) {
+        right_motor_direction = direction;
         switch (direction) {
         case MOTOR_DIR_FWD:   right_motor_fwd_en(); break;
         case MOTOR_DIR_BWD:   right_motor_bwd_en(); break;

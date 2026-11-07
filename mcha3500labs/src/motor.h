@@ -17,6 +17,8 @@ typedef enum {
 
 void motor_set_direction(Motor motor, MotorDirection direction);
 void motor_set_dc(Motor motor, int percent_dc);
+int motor_get_dc(Motor motor);
+float motor_get_voltage(Motor motor);
 void setLeftMotorDC(int percent_dc);
 void setRightMotorDC(int percent_dc);
 

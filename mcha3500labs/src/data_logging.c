@@ -14,6 +14,7 @@
 #define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
 #define MOTOR_LOG_DURATION_SECONDS 3U
 #define VELOCITY_LOG_DURATION_SECONDS 5U
+#define MOTOR_SINE_LOG_DURATION_SECONDS 10U
 
 uint16_t logCount;
 
@@ -23,11 +24,13 @@ int _is_init = 0;
 osTimerId_t osTim_dataLogging;
 static int32_t (*encoder_read)(void);
 static float (*current_read)(void);
+static Motor sine_log_motor;
 
 /* Function Declarations */
 static void log_pointer(void *argument); // The param (void *argument) is required by FreeRTOS for timer callback
 static void encoder_log_data(void);
 static void velocity_log_data(void);
+static void motor_sine_log_data(void);
 void logging_start(void *log_function_ptr);
 
 void logging_init(void) {
@@ -108,6 +111,26 @@ static void velocity_log_data(void) {
     if (logCount >= (VELOCITY_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
     }
+}
+
+static void motor_sine_log_data(void) {
+    float time_seconds = ((float)logCount * TIMER_PERIOD_MS) / 1000.0f;
+    float voltage = motor_get_voltage(sine_log_motor);
+    float current = (sine_log_motor == MOTOR_LEFT) ? left_current_read() : right_current_read();
+    float velocity = (sine_log_motor == MOTOR_LEFT) ?
+                     left_motor_velocity_rad_s() : right_motor_velocity_rad_s();
+
+    printf("%f,%f,%f,%f\n", time_seconds, voltage, current, velocity);
+    logCount++;
+    if (logCount >= (MOTOR_SINE_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
+        logging_stop();
+    }
+}
+
+void motor_sine_logging_start(Motor motor)
+{
+    sine_log_motor = motor;
+    logging_start(&motor_sine_log_data);
 }
 
 void motor_velocity_log(int argc, char *argv[])
