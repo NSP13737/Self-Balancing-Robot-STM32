@@ -13,7 +13,7 @@
 
 #define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
 #define MOTOR_LOG_DURATION_SECONDS 3U
-#define BATTV_LOG_DURATION_SECONDS 1/TIMER_PERIOD_MS
+#define VELOCITY_LOG_DURATION_SECONDS 5U
 
 uint16_t logCount;
 
@@ -27,6 +27,7 @@ static float (*current_read)(void);
 /* Function Declarations */
 static void log_pointer(void *argument); // The param (void *argument) is required by FreeRTOS for timer callback
 static void encoder_log_data(void);
+static void velocity_log_data(void);
 void logging_start(void *log_function_ptr);
 
 void logging_init(void) {
@@ -100,13 +101,24 @@ static void encoder_log_data(void) {
     }
 }
 
-static void batt_voltage_log(void) {
-    float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * logCount;
-    printf("%f,%" PRId32 "\n", relative_time, batt_voltage_read());
+static void velocity_log_data(void) {
+    printf("Left: %f | Right: %f\n",
+           left_motor_velocity_rad_s(), right_motor_velocity_rad_s());
     logCount++;
-    if (logCount >= (BATTV_LOG_DURATION_SECONDS * 1000U / TIMER_PERIOD_MS)) {
+    if (logCount >= (VELOCITY_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
     }
+}
+
+void motor_velocity_log(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        printf("Usage: motorVelocityLog\n");
+        return;
+    }
+
+    logging_start(&velocity_log_data);
 }
 
 void current_log(int argc, char *argv[])
@@ -116,7 +128,6 @@ void current_log(int argc, char *argv[])
         return;
     }
 
-    Motor motor;
     if (strcmp(argv[1], "left") == 0) {
         left_current_logging_start();
     } else if (strcmp(argv[1], "right") == 0) {

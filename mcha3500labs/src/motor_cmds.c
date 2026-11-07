@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+#include "stm32f4xx_hal.h"
 
 void motorDir(int argc, char *argv[])
 {
@@ -58,4 +60,41 @@ void motor_set_DC(int argc, char *argv[]) {
         return;
     }
     motor_set_dc(motor, motor_dc_percent);
+}
+
+void motor_sine(int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf("Usage: motorSine <left|right>\n");
+        return;
+    }
+
+    Motor motor;
+    if (strcmp(argv[1], "left") == 0) {
+        motor = MOTOR_LEFT;
+    } else if (strcmp(argv[1], "right") == 0) {
+        motor = MOTOR_RIGHT;
+    } else {
+        printf("Motor must be left or right\n");
+        return;
+    }
+
+    /* Signed sine wave: direction follows the sign, duty cycle its magnitude. */
+    const uint32_t duration_ms = 10000U;
+    const uint32_t period_ms = 2000U;
+    const uint32_t sample_ms = 20U;
+    uint32_t start = HAL_GetTick();
+
+    while ((uint32_t)(HAL_GetTick() - start) < duration_ms) {
+        uint32_t elapsed = HAL_GetTick() - start;
+        double phase = (2.0 * 3.14159265358979323846 * (elapsed % period_ms)) / period_ms;
+        double sine_value = sin(phase);
+        MotorDirection direction = (sine_value >= 0.0) ? MOTOR_DIR_FWD : MOTOR_DIR_BWD;
+        int duty_cycle = (int)(75.0 * fabs(sine_value) + 0.5);
+        motor_set_direction(motor, direction);
+        motor_set_dc(motor, duty_cycle);
+        HAL_Delay(sample_ms);
+    }
+
+    motor_set_dc(motor, 0);
 }

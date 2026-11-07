@@ -8,6 +8,7 @@ void right_current_logging_start(void);
 void imu_logging_start(void);
 void left_encoder_logging_start(void);
 void right_encoder_logging_start(void);
+void motor_velocity_log(int argc, char *argv[]);
 void logging_stop(void);
 
 #endif

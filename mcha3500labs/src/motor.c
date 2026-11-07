@@ -3,12 +3,34 @@
 #include "cmsis_os2.h"
 #include <stdio.h>
 
+#define MOTOR_VELOCITY_SAMPLE_MS 5U
+#define MOTOR_VELOCITY_WINDOW 5U
+#define MOTOR_PI 3.14159265358979323846f
+
 static uint8_t _left_motor_is_init = 0;
 static uint8_t _right_motor_is_init = 0;
 
 static TIM_HandleTypeDef htim3;
 
 static uint32_t motor_dc_to_compare(int percent_dc);
+
+/* SETUP FOR VELOCITY ESTIMATION */
+static void motor_velocity_thread(void *arg);
+
+#define ENCODER_COUNTS_PER_WHEEL_REV 1320.0f // 11 pulses per revolution * 4 (for quadrature) * 30 (gear ratio)
+static volatile float left_velocity_rad_s = 0.0f;
+static volatile float right_velocity_rad_s = 0.0f;
+static int32_t left_count_samples[MOTOR_VELOCITY_WINDOW];
+static int32_t right_count_samples[MOTOR_VELOCITY_WINDOW];
+static uint32_t velocity_time_samples[MOTOR_VELOCITY_WINDOW];
+static uint32_t velocity_sample_index = 0U;
+static uint32_t velocity_sample_count = 0U;
+
+static const osThreadAttr_t motor_velocity_thread_attr = {
+    .name = "motor_velocity",
+    .priority = osPriorityLow,
+    .stack_size = 512U
+};
 
 //TODO: configure for left motor
 void left_motor_PWM_init(void) {
@@ -279,6 +301,84 @@ int32_t right_motor_encoder_getValue(void) {
     return right_encoder_count;
 }
 
+float left_motor_velocity_rad_s(void)
+{
+    return left_velocity_rad_s;
+}
+
+float right_motor_velocity_rad_s(void)
+{
+    return right_velocity_rad_s;
+}
+
+void motor_velocity_init(void)
+{
+    static uint8_t initialized = 0U;
+    if (!initialized) {
+        initialized = 1U;
+        osThreadNew(motor_velocity_thread, NULL, &motor_velocity_thread_attr);
+    }
+}
+
+static void motor_velocity_thread(void *arg)
+{
+    (void)arg;
+    int32_t previous_left_count = left_motor_encoder_getValue();
+    int32_t previous_right_count = right_motor_encoder_getValue();
+    uint32_t previous_time = HAL_GetTick();
+
+    for (;;) {
+        int32_t current_left_count;
+        int32_t current_right_count;
+        int32_t left_delta;
+        int32_t right_delta;
+        uint32_t current_time;
+        uint32_t elapsed_ms;
+        int64_t left_sum = 0;
+        int64_t right_sum = 0;
+        uint32_t elapsed_sum_ms = 0U;
+
+        osDelay(MOTOR_VELOCITY_SAMPLE_MS);
+        current_time = HAL_GetTick();
+        current_left_count = left_motor_encoder_getValue();
+        current_right_count = right_motor_encoder_getValue();
+        left_delta = (int32_t)((uint32_t)current_left_count - (uint32_t)previous_left_count);
+        right_delta = (int32_t)((uint32_t)current_right_count - (uint32_t)previous_right_count);
+        elapsed_ms = current_time - previous_time;
+        previous_left_count = current_left_count;
+        previous_right_count = current_right_count;
+        previous_time = current_time;
+
+        if (elapsed_ms == 0U) {
+            continue;
+        }
+
+        left_count_samples[velocity_sample_index] = left_delta;
+        right_count_samples[velocity_sample_index] = right_delta;
+        velocity_time_samples[velocity_sample_index] = elapsed_ms;
+        velocity_sample_index = (velocity_sample_index + 1U) % MOTOR_VELOCITY_WINDOW;
+        if (velocity_sample_count < MOTOR_VELOCITY_WINDOW) {
+            velocity_sample_count++;
+        }
+
+        for (uint32_t i = 0U; i < velocity_sample_count; i++) {
+            left_sum += left_count_samples[i];
+            right_sum += right_count_samples[i];
+            elapsed_sum_ms += velocity_time_samples[i];
+        }
+
+        if (ENCODER_COUNTS_PER_WHEEL_REV > 0.0f && elapsed_sum_ms > 0U) {
+            float counts_to_radians = (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
+            float elapsed_seconds = (float)elapsed_sum_ms / 1000.0f;
+            left_velocity_rad_s = ((float)left_sum * counts_to_radians) / elapsed_seconds;
+            right_velocity_rad_s = ((float)right_sum * counts_to_radians) / elapsed_seconds;
+        } else {
+            left_velocity_rad_s = 0.0f;
+            right_velocity_rad_s = 0.0f;
+        }
+    }
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     if (GPIO_Pin == GPIO_PIN_4) {
         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) ==
@@ -314,3 +414,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
         }
     }
 }
+
+

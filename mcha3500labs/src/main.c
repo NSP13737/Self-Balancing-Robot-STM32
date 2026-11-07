@@ -33,6 +33,7 @@ int main(void)
     right_motor_PWM_init();
     left_motor_encoder_init();
     right_motor_encoder_init();
+    motor_velocity_init();
     logging_init();
     IMU_init();
     ctrl_init();
