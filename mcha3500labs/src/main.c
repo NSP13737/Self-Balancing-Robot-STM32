@@ -8,6 +8,7 @@
 #include "heartbeat_task.h"
 #include "dummy_task.h"
 #include "current_sens.h"
+#include "batt_voltage.h"
 #include "motor.h"
 #include "data_logging.h"
 #include "IMU.h"
@@ -27,6 +28,7 @@ int main(void)
     // Initialise hardware modules
     uart_init();
     current_sense_init();
+    batt_voltage_init();
     left_motor_PWM_init();
     right_motor_PWM_init();
     left_motor_encoder_init();

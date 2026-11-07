@@ -49,6 +49,7 @@ SRC_STM = \
 	$(SRCDIR)/motor.c \
 	$(SRCDIR)/motor_cmds.c \
 	$(SRCDIR)/current_sens.c \
+	$(SRCDIR)/batt_voltage.c \
 	$(SRCDIR)/data_logging.c \
 	$(SRCDIR)/IMU.c \
 	$(SRCDIR)/controller.c \

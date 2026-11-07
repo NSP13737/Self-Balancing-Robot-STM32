@@ -5,6 +5,7 @@
 #include <inttypes.h> // For PRIxx and SCNxx macros
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "current_sens.h"
+#include "batt_voltage.h"
 #include "cmsis_os2.h"
 #include "data_logging.h"
 #include "IMU.h"
@@ -12,6 +13,7 @@
 
 #define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
 #define MOTOR_LOG_DURATION_SECONDS 3U
+#define BATTV_LOG_DURATION_SECONDS 1/TIMER_PERIOD_MS
 
 uint16_t logCount;
 
@@ -94,6 +96,15 @@ static void encoder_log_data(void) {
     printf("%f,%" PRId32 "\n", relative_time, encoder_read());
     logCount++;
     if (logCount >= (MOTOR_LOG_DURATION_SECONDS * 1000U / TIMER_PERIOD_MS)) {
+        logging_stop();
+    }
+}
+
+static void batt_voltage_log(void) {
+    float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * logCount;
+    printf("%f,%" PRId32 "\n", relative_time, batt_voltage_read());
+    logCount++;
+    if (logCount >= (BATTV_LOG_DURATION_SECONDS * 1000U / TIMER_PERIOD_MS)) {
         logging_stop();
     }
 }

@@ -22,11 +22,13 @@ static void _help(int, char *[]);
 static void _reset(int, char *[]);
 static void _cmd_leftEncoderLog(int argc, char *argv[]);
 static void _cmd_rightEncoderLog(int argc, char *argv[]);
+static void _cmd_battVoltage(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
 #include "data_logging.h"
 #include "motor_cmds.h"
+#include "batt_voltage.h"
 #include "controller.h"
 static void _cmd_updateControl(int argc, char *argv[]);
 
@@ -40,9 +42,10 @@ static CMD_T cmd_table[] =
     {_cmd_leftEncoderLog    , "leftEncoderLog", ""             , "Log left motor encoder count for 3 seconds."} ,
     {_cmd_rightEncoderLog   , "rightEncoderLog", ""            , "Log right motor encoder count for 3 seconds."} ,
     {motorDir          , "motorDir"       , "[left|right] [FWD|BWD|NODIR]", "Sets INX pins for motor direction."},
-    {motor_set_DC       , "motorSetDC"      , '[left|right] [dc_percentage]',   "Sets duty cycle of specified motor"},
+    {motor_set_DC       , "motorSetDC"      , "[left|right] [dc_percentage]",   "Sets duty cycle of specified motor"},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
+    {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -88,6 +91,13 @@ static void _cmd_updateControl(int argc, char *argv[])
         /* Print control action */
         printf("%f\n", getControl());
     }
+}
+
+static void _cmd_battVoltage(int argc, char *argv[]) {
+    UNUSED(argv);
+    UNUSED(argc);
+    printf("%f\n", batt_voltage_read());
+
 }
 
 static void _print_chip_pinout(void);
