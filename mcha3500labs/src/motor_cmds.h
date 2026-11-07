@@ -2,5 +2,6 @@
 #define MOTOR_CMDS_H
 
 void motorDir(int, char *[]);
+void motor_set_DC(int, char *[]);
 
 #endif

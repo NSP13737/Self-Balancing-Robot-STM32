@@ -8,6 +8,8 @@ static uint8_t _right_motor_is_init = 0;
 
 static TIM_HandleTypeDef htim3;
 
+static uint32_t motor_dc_to_compare(int percent_dc);
+
 //TODO: configure for left motor
 void left_motor_PWM_init(void) {
     // uses pa6 and tim_channel_1
@@ -78,6 +80,7 @@ void right_motor_PWM_init(void) {
     htim3.Init.Prescaler = TIM_CLOCKPRESCALER_DIV1;
     htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
     // \frac{\left(180\cdot10^{6}\right)}{10\cdot10^{3}}-1
+    //calculates 10khz assuming 180mhz cpu (I think)
     htim3.Init.Period = 9999;
     htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     HAL_TIM_PWM_Init(&htim3);
@@ -97,6 +100,35 @@ void right_motor_PWM_init(void) {
     right_motor_direction_init();
     right_motor_no_dir();
 }
+
+void motor_set_dc(Motor motor, int percent_dc) {
+    if (motor == MOTOR_LEFT) {
+        setLeftMotorDC(percent_dc);
+    }
+    if (motor == MOTOR_RIGHT) {
+        setRightMotorDC(percent_dc);
+    }
+}
+
+static uint32_t motor_dc_to_compare(int percent_dc) {
+    if (percent_dc < 0) {
+        percent_dc = 0;
+    } else if (percent_dc > 100) {
+        percent_dc = 100;
+    }
+
+    return ((uint32_t)(htim3.Init.Period + 1U) * (uint32_t)percent_dc) / 100U;
+}
+
+void setLeftMotorDC(int percent_dc) {
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, motor_dc_to_compare(percent_dc));
+}
+
+void setRightMotorDC(int percent_dc) {
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, motor_dc_to_compare(percent_dc));
+}
+
+/* MOTOR DIRECTION CONTROL */
 
 void left_motor_direction_init(void) {
     // Set up PC7 and PB6 (IN1 / IN2) to be outputs
@@ -148,12 +180,12 @@ void motor_set_direction(Motor motor, MotorDirection direction)
 }
 
 void left_motor_fwd_en(void) {
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-}
-void left_motor_bwd_en(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+}
+void left_motor_bwd_en(void) {
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
 }
 void left_motor_no_dir(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
@@ -172,6 +204,8 @@ void right_motor_no_dir(void) {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 }
+
+/* ENCODER */
 
 void left_motor_encoder_init(void) {
     //config for pb4 and pb5

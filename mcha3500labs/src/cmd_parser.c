@@ -40,6 +40,7 @@ static CMD_T cmd_table[] =
     {_cmd_leftEncoderLog    , "leftEncoderLog", ""             , "Log left motor encoder count for 3 seconds."} ,
     {_cmd_rightEncoderLog   , "rightEncoderLog", ""            , "Log right motor encoder count for 3 seconds."} ,
     {motorDir          , "motorDir"       , "[left|right] [FWD|BWD|NODIR]", "Sets INX pins for motor direction."},
+    {motor_set_DC       , "motorSetDC"      , '[left|right] [dc_percentage]',   "Sets duty cycle of specified motor"},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
 };
