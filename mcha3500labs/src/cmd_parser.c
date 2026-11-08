@@ -7,6 +7,7 @@
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
 #include "motor.h"
+#include "IMU.h"
 
 // Type for each command table entry
 typedef struct
@@ -23,6 +24,8 @@ static void _reset(int, char *[]);
 static void _cmd_leftEncoderLog(int argc, char *argv[]);
 static void _cmd_rightEncoderLog(int argc, char *argv[]);
 static void _cmd_battVoltage(int argc, char *argv[]);
+static void _cmd_accXLog(int argc, char *argv[]);
+static void _cmd_accZLog(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -46,6 +49,8 @@ static CMD_T cmd_table[] =
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
+    {_cmd_accXLog          , "accXLog" , ""              , "Log accelerometer X for 5 seconds."} ,
+    {_cmd_accZLog          , "accZLog" , ""              , "Log accelerometer Z for 5 seconds."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -98,6 +103,38 @@ static void _cmd_battVoltage(int argc, char *argv[]) {
     UNUSED(argc);
     printf("%f\n", batt_voltage_read());
 
+}
+
+static void _cmd_accXLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: accXLog\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < 5000U) {
+        IMU_read();
+        printf("%f\n", get_accX());
+        HAL_Delay(100);
+    }
+}
+
+static void _cmd_accZLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: accZLog\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < 5000U) {
+        IMU_read();
+        printf("%f\n", get_accZ());
+        HAL_Delay(100);
+    }
 }
 
 static void _print_chip_pinout(void);

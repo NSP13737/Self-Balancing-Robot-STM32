@@ -80,10 +80,10 @@ static void imu_log_data(void) {
     IMU_read();
 
     double acc_angle = get_acc_angle();
-    float gyro_X = get_gyroX();
+    float gyro_Y = get_gyroY();
     float encoderCount = left_motor_encoder_getValue();
     float relative_time = (TIMER_PERIOD_MS/1000) * logCount;
-    printf("%f,%f,%f,%f", relative_time, acc_angle, gyro_X, encoderCount);
+    printf("%f,%f,%f,%f", relative_time, acc_angle, gyro_Y, encoderCount);
     logCount++;
     if (logCount >= (5 / (TIMER_PERIOD_MS/1000))) {// call after 5 seconds
         logging_stop();
