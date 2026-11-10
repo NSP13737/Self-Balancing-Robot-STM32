@@ -45,6 +45,8 @@ void right_motor_encoder_init(void);
 void EXTI15_10_IRQHandler(void);
 int32_t right_motor_encoder_getValue(void);
 
+float get_driver_v_drop(Motor motor);
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 #endif

@@ -46,6 +46,7 @@ static CMD_T cmd_table[] =
     {motor_set_DC       , "motorSetDC"      , "[left|right] [dc_percentage]",   "Sets duty cycle of specified motor"},
     {motor_sine         , "motorSine"       , "[left|right]", "Runs a 0-75% sine duty cycle for 10 seconds (2 s period)."},
     {motor_sine_log     , "motorSineLog"    , "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
+    {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,

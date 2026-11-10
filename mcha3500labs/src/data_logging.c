@@ -75,6 +75,7 @@ static void current_log_data(void) {
     printf("%f,%f", relative_time, current_read());
     logCount++;
     if (logCount >= (2 / ((float)TIMER_PERIOD_MS/1000))) {// call after 2 seconds
+        printf("STOP\n");
         logging_stop();
     }
     printf("\n");

@@ -23,9 +23,9 @@ static int parse_motor(const char *name, Motor *motor)
 
 static void run_motor_sine(Motor motor)
 {
-    const uint32_t duration_ms = 10000U;
-    const uint32_t period_ms = 1000U;
-    const uint32_t sample_ms = 20U;
+    const uint32_t duration_ms = 20000U;
+    const uint32_t period_ms = 5000U;
+    const uint32_t sample_ms = 5U;
     uint32_t start = HAL_GetTick();
 
     while ((uint32_t)(HAL_GetTick() - start) < duration_ms) {
@@ -33,12 +33,36 @@ static void run_motor_sine(Motor motor)
         double phase = (2.0 * 3.14159265358979323846 * (elapsed % period_ms)) / period_ms;
         double sine_value = sin(phase);
         MotorDirection direction = (sine_value >= 0.0) ? MOTOR_DIR_FWD : MOTOR_DIR_BWD;
-        int duty_cycle = (int)(75.0 * fabs(sine_value) + 0.5);
+        int duty_cycle = (int)(90.0 * fabs(sine_value) + 0.5);
         motor_set_direction(motor, direction);
         motor_set_dc(motor, duty_cycle);
         osDelay(sample_ms);
     }
 
+    motor_set_dc(motor, 0);
+}
+
+static void run_motor_dc_stages(Motor motor)
+{
+    static const int duty_cycles[] = {80, 80, 80, 80, 80};
+    static const MotorDirection directions[] = {
+        MOTOR_DIR_FWD, MOTOR_DIR_BWD
+    };
+
+    for (size_t direction_index = 0;
+         direction_index < sizeof(directions) / sizeof(directions[0]);
+         direction_index++) {
+        for (size_t dc_index = 0;
+             dc_index < sizeof(duty_cycles) / sizeof(duty_cycles[0]);
+             dc_index++) {
+            uint32_t stage_start = HAL_GetTick();
+            motor_set_direction(motor, directions[direction_index]);
+            motor_set_dc(motor, duty_cycles[dc_index]);
+            while ((uint32_t)(HAL_GetTick() - stage_start) < 2000U) {
+                osDelay(5U);
+            }
+        }
+    }
     motor_set_dc(motor, 0);
 }
 
@@ -125,7 +149,23 @@ void motor_sine_log(int argc, char *argv[])
         return;
     }
 
-    /* Start sampling, then run the 10-second sine wave while it logs. */
+    /* Start sampling, then run the sine wave while it logs. */
     motor_sine_logging_start(motor);
     run_motor_sine(motor);
+}
+
+void motor_dc_log(int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf("Usage: motorDCLog <left|right>\n");
+        return;
+    }
+
+    Motor motor;
+    if (!parse_motor(argv[1], &motor)) {
+        return;
+    }
+
+    motor_sine_logging_start(motor);
+    run_motor_dc_stages(motor);
 }

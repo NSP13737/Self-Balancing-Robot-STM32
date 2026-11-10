@@ -2,7 +2,9 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "batt_voltage.h"
+#include "current_sens.h"
 #include <stdio.h>
+#include <math.h>
 
 #define MOTOR_VELOCITY_SAMPLE_MS 5U
 #define MOTOR_VELOCITY_WINDOW 5U
@@ -180,7 +182,13 @@ float motor_get_voltage(Motor motor)
     if (direction == MOTOR_DIR_NODIR) return 0.0f;
 
     float signed_dc = (direction == MOTOR_DIR_BWD) ? -(float)dc : (float)dc;
-    return batt_voltage_read() * signed_dc / 100.0f;
+    float batt_v = batt_voltage_read();
+    return (batt_v > 0) ? ((batt_v-get_driver_v_drop(motor))* signed_dc / 100.0f) : ((batt_v+get_driver_v_drop(motor))* signed_dc / 100.0f);
+}
+
+float get_driver_v_drop(Motor motor) {
+    float (*get_current)(void) = (motor == MOTOR_LEFT) ? left_current_read : right_current_read;
+    return 1.4f+(1.15f*fabs(get_current())); // We want this to be in abs val bc sign is handled by motor_get_voltage
 }
 
 /* MOTOR DIRECTION CONTROL */
