@@ -81,7 +81,7 @@ static void imu_log_data(void) {
 
     double acc_angle = get_acc_angle();
     float gyro_Y = get_gyroY();
-    float encoderCount = left_motor_encoder_getValue();
+    float encoderCount = right_motor_encoder_getValue();
     float relative_time = (TIMER_PERIOD_MS/1000) * logCount;
     printf("%f,%f,%f,%f", relative_time, acc_angle, gyro_Y, encoderCount);
     logCount++;

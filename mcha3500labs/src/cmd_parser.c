@@ -9,6 +9,8 @@
 #include "motor.h"
 #include "IMU.h"
 
+#define SWING_TEST_DURATION_MS 20000U
+
 // Type for each command table entry
 typedef struct
 {
@@ -26,6 +28,7 @@ static void _cmd_rightEncoderLog(int argc, char *argv[]);
 static void _cmd_battVoltage(int argc, char *argv[]);
 static void _cmd_accXLog(int argc, char *argv[]);
 static void _cmd_accZLog(int argc, char *argv[]);
+static void _cmd_swing_test_log(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -51,6 +54,7 @@ static CMD_T cmd_table[] =
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
     {_cmd_accXLog          , "accXLog" , ""              , "Log accelerometer X for 5 seconds."} ,
     {_cmd_accZLog          , "accZLog" , ""              , "Log accelerometer Z for 5 seconds."} ,
+    {_cmd_swing_test_log        , "swing_test_log", ""         , "Log right wheel encoder count, IMU angle, and angular velocity for 5 seconds."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -134,6 +138,27 @@ static void _cmd_accZLog(int argc, char *argv[])
         IMU_read();
         printf("%f\n", get_accZ());
         HAL_Delay(100);
+    }
+}
+
+static void _cmd_swing_test_log(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: swing_test_log\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < SWING_TEST_DURATION_MS) {
+        IMU_read();
+        float relative_time = (HAL_GetTick() - start) / 1000.0f;
+        printf("%f,%" PRId32 ",%f,%f\n",
+               relative_time,
+               right_motor_encoder_getValue(),
+               get_acc_angle(),
+               get_gyroY());
+        HAL_Delay(10);
     }
 }
 
