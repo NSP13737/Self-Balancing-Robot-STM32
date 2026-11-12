@@ -48,7 +48,7 @@ static CMD_T cmd_table[] =
     {motor_sine_log     , "motorSineLog"    , "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
     {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
-    {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
+    {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -79,7 +79,7 @@ static void _cmd_rightEncoderLog(int argc, char *argv[])
 static void _cmd_updateControl(int argc, char *argv[])
 {
     // Check for correct input arguments
-    if(argc != 5)
+    if(argc != 4)
     {
         printf("Incorrect arguments\n");
     }
@@ -89,7 +89,6 @@ static void _cmd_updateControl(int argc, char *argv[])
         ctrl_set_x1(atof(argv[1]));
         ctrl_set_x2(atof(argv[2]));
         ctrl_set_x3(atof(argv[3]));
-        ctrl_set_x4(atof(argv[4]));
         /* Update controller value */
         ctrl_update();
         /* Print control action */
