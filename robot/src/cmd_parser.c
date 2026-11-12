@@ -31,6 +31,7 @@ static void _cmd_battVoltage(int argc, char *argv[]);
 #include "batt_voltage.h"
 #include "controller.h"
 static void _cmd_updateControl(int argc, char *argv[]);
+static void _cmd_updateControl_w_integrator(int argc, char *argv[]);
 
 // Command table
 static CMD_T cmd_table[] =
@@ -49,6 +50,7 @@ static CMD_T cmd_table[] =
     {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
+    {_cmd_updateControl_w_integrator      , "getControlwIntegrator"   , "x1 x2 x3 integratorState"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -93,6 +95,26 @@ static void _cmd_updateControl(int argc, char *argv[])
         ctrl_update();
         /* Print control action */
         printf("%f\n", getControl());
+    }
+}
+
+static void _cmd_updateControl_w_integrator(int argc, char *argv[])
+{
+    // Check for correct input arguments
+    if(argc != 4)
+    {
+        printf("Incorrect arguments\n");
+    }
+    else
+    {
+        /* Update states using ctrl_set_xi functions */
+        ctrl_set_x1(atof(argv[1]));
+        ctrl_set_x2(atof(argv[2]));
+        ctrl_set_x3(atof(argv[3]));
+        /* Update controller value */
+        ctrl_update();
+        /* Print control action */
+        printf("%f,%f\n", getControl(), ctrl_get_z_state());
     }
 }
 

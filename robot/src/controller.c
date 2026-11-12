@@ -77,6 +77,11 @@ void ctrl_set_x3(float x3)
     ctrl_x_f32[2] = x3;
 }
 
+float ctrl_get_z_state(void) {
+    // Get last state which shuold be integrator z
+    return ctrl_x_f32[CTRL_N_STATE-1];
+}
+
 /* Get the current control output */
 float getControl(void)
 {
