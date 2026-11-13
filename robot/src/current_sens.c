@@ -76,7 +76,7 @@ static float current_sense_read(uint32_t channel)
 
 float left_current_read(void)
 {
-    return current_sense_read(ADC_CHANNEL_14); /* PC4 */
+    return -current_sense_read(ADC_CHANNEL_14); /* PC4 */
 }
 
 float right_current_read(void)

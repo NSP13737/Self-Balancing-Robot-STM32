@@ -24,7 +24,7 @@ static int parse_motor(const char *name, Motor *motor)
 static void run_motor_sine(Motor motor)
 {
     const uint32_t duration_ms = 20000U;
-    const uint32_t period_ms = 5000U;
+    const uint32_t period_ms = 3000U;
     const uint32_t sample_ms = 5U;
     uint32_t start = HAL_GetTick();
 

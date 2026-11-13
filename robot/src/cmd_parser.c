@@ -30,8 +30,10 @@ static void _cmd_battVoltage(int argc, char *argv[]);
 #include "motor_cmds.h"
 #include "batt_voltage.h"
 #include "controller.h"
+#include "control_allocation.h"
 static void _cmd_updateControl(int argc, char *argv[]);
 static void _cmd_updateControl_w_integrator(int argc, char *argv[]);
+static void _cmd_controlAllocation(int argc, char *argv[]);
 
 // Command table
 static CMD_T cmd_table[] =
@@ -50,6 +52,7 @@ static CMD_T cmd_table[] =
     {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
+    {_cmd_controlAllocation  , "getAllocatedControl", "x1 x2 x3"        , "Returns allocated control given state inputs."} ,
     {_cmd_updateControl_w_integrator      , "getControlwIntegrator"   , "x1 x2 x3 integratorState"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
 };
@@ -116,6 +119,24 @@ static void _cmd_updateControl_w_integrator(int argc, char *argv[])
         /* Print control action */
         printf("%f,%f\n", getControl(), ctrl_get_z_state());
     }
+}
+
+static void _cmd_controlAllocation(int argc, char *argv[])
+{
+    if (argc != 4)
+    {
+        printf("Incorrect arguments\n");
+        return;
+    }
+
+    /* Update states and calculate the LQR control output, as getControl does. */
+    ctrl_set_x1(atof(argv[1]));
+    ctrl_set_x2(atof(argv[2]));
+    ctrl_set_x3(atof(argv[3]));
+    ctrl_update();
+
+    /* x2 is the measured velocity; controller state updates at 5 ms. */
+    printf("%f\n", controlAllocation(getControl(), (float)atof(argv[2]), 0.005f));
 }
 
 static void _cmd_battVoltage(int argc, char *argv[]) {
