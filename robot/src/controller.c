@@ -10,7 +10,7 @@
 static float ctrl_mK_f32[CTRL_N_INPUT*CTRL_N_STATE] = 
 {
     // negative K, 1x4
-    13.624554627906402,	49.843705436558110,	28.753077727281507,	3.055292510331334
+    13.624554627906402f, 49.843705436558110f, 28.753077727281507f, 3.055292510331334f
 };
 
 static float ctrl_x_f32[CTRL_N_STATE] = 
@@ -31,7 +31,7 @@ static float ctrl_u_f32[CTRL_N_INPUT] =
 static float ctrl_Az_f32[CTRL_N_STATE] =
 {
     // state transition matrix 1x4
-    -0.005, 0, 0, 1,
+    0.005, 0, 0, 1,
 
 };
 
