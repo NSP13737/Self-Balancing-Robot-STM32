@@ -80,12 +80,12 @@ float get_acc(int16_t raw_accel) {
 }
 
 float get_accZ(void) {
+    /* The extra code here is to detect intermittent disconnects and reinit is it was disconnected */
     static float prevZAcc = FLT_MIN;
     float convertedAcc = get_acc(IMU_datastruct.Accelerometer_Z);    
     
     if (convertedAcc == prevZAcc) {
         IMU_init();
-        ;
     }
     else {
         prevZAcc = convertedAcc;
@@ -94,8 +94,8 @@ float get_accZ(void) {
     return convertedAcc;
 }
 
-float get_accY(void) {
-    return get_acc(IMU_datastruct.Accelerometer_Y);
+float get_accX(void) {
+    return get_acc(IMU_datastruct.Accelerometer_X);
 }
 
 float get_gyro(int16_t raw_gyro) {
@@ -116,11 +116,11 @@ float get_gyro(int16_t raw_gyro) {
     return (min_mapping + (((float)(raw_gyro - INT16_MIN) / (INT16_MAX - INT16_MIN)) * (max_mapping - min_mapping) ));
 }
 
-float get_gyroX(void) {
-    return get_gyro(IMU_datastruct.Gyroscope_X);
+float get_gyroY(void) {
+    return -get_gyro(IMU_datastruct.Gyroscope_Y);
 }
 
 double get_acc_angle(void) {
-    return -atan2(get_accZ(), get_accY());
+    return -atan2(get_accX(), -get_accZ());
 }
 

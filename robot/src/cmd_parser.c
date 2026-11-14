@@ -7,6 +7,9 @@
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
 #include "motor.h"
+#include "IMU.h"
+
+#define SWING_TEST_DURATION_MS 20000U
 
 // Type for each command table entry
 typedef struct
@@ -23,6 +26,9 @@ static void _reset(int, char *[]);
 static void _cmd_leftEncoderLog(int argc, char *argv[]);
 static void _cmd_rightEncoderLog(int argc, char *argv[]);
 static void _cmd_battVoltage(int argc, char *argv[]);
+static void _cmd_accXLog(int argc, char *argv[]);
+static void _cmd_accZLog(int argc, char *argv[]);
+static void _cmd_swing_test_log(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -38,26 +44,36 @@ static void _cmd_controlAllocation(int argc, char *argv[]);
 // Command table
 static CMD_T cmd_table[] =
 {
-    {_help              , "help"        , ""                          , "Displays this help message"             } ,
-    {_reset             , "reset"       , ""                          , "Restarts the system."                   } ,
-    {heartbeat_cmd      , "heartbeat"   , "[start|stop]"              , "Get status or start/stop heartbeat task"} ,
-    {imu_logging_start      , "imuLogData"   , ""              , "Get time,acc_angle,gyro_angle_velo,pot_voltage."} ,
-    {_cmd_leftEncoderLog    , "leftEncoderLog", ""             , "Log left motor encoder count for 3 seconds."} ,
-    {_cmd_rightEncoderLog   , "rightEncoderLog", ""            , "Log right motor encoder count for 3 seconds."} ,
-    {motor_velocity_log     , "motorVelocityLog", ""            , "Log left and right wheel velocity in rad/s for 5 seconds."},
-    {motorDir          , "motorDir"       , "[left|right] [FWD|BWD|NODIR]", "Sets INX pins for motor direction."},
-    {motor_set_DC       , "motorSetDC"      , "[left|right] [dc_percentage]",   "Sets duty cycle of specified motor"},
-    {motor_sine         , "motorSine"       , "[left|right]", "Runs a 0-75% sine duty cycle for 10 seconds (2 s period)."},
-    {motor_sine_log     , "motorSineLog"    , "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
-    {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
-    {setVel              , "setVel"          , "[left|right] [speed_rad_s]", "Controls the selected wheel to the requested rad/s speed for 5 seconds."},
-    {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
-    {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
-    {_cmd_controlAllocation  , "getAllocatedControl", "x1 x2 x3"        , "Returns allocated control given state inputs."} ,
-    {_cmd_updateControl_w_integrator      , "getControlwIntegrator"   , "x1 x2 x3 integratorState"              , "Returns control given state inputs."} ,
-    {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
-    {state_estimate_log, "stateEstimateLog", "", "Log time and estimated states for 5 seconds."},
+    /* System commands */
+    {_help, "help", "", "Displays this help message"},
+    {_reset, "reset", "", "Restarts the system."},
+    {heartbeat_cmd, "heartbeat", "[start|stop]", "Get status or start/stop heartbeat task"},
+
+    /* Sensor and data logging commands */
+    {_cmd_accXLog, "accXLog", "", "Log accelerometer X for 5 seconds."},
+    {_cmd_accZLog, "accZLog", "", "Log accelerometer Z for 5 seconds."},
+    {_cmd_battVoltage, "battV", "", "Returns battery voltage."},
+    {imu_logging_start, "imuLogData", "", "Get time,acc_angle,gyro_angle_velo,pot_voltage."},
     {imu_kf_log, "imuKFLog", "", "Log raw IMU and Kalman angle and angular velocity for 5 seconds."},
+    {_cmd_leftEncoderLog, "leftEncoderLog", "", "Log left motor encoder count for 3 seconds."},
+    {_cmd_rightEncoderLog, "rightEncoderLog", "", "Log right motor encoder count for 3 seconds."},
+    {motor_velocity_log, "motorVelocityLog", "", "Log left and right wheel velocity in rad/s for 5 seconds."},
+    {current_log, "currentLog", "[left|right]", "Gets current logs"},
+    {state_estimate_log, "stateEstimateLog", "", "Log time and estimated states for 5 seconds."},
+    {_cmd_swing_test_log, "swing_test_log", "", "Log right wheel encoder count, IMU angle, and angular velocity for 5 seconds."},
+
+    /* Motor commands */
+    {motorDir, "motorDir", "[left|right] [FWD|BWD|NODIR]", "Sets INX pins for motor direction."},
+    {motor_set_DC, "motorSetDC", "[left|right] [dc_percentage]", "Sets duty cycle of specified motor"},
+    {motor_sine, "motorSine", "[left|right]", "Runs a 0-75% sine duty cycle for 10 seconds (2 s period)."},
+    {motor_sine_log, "motorSineLog", "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
+    {motor_dc_log, "motorDCLog", "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
+    {setVel, "setVel", "[left|right] [speed_rad_s]", "Controls the selected wheel to the requested rad/s speed for 5 seconds."},
+
+    /* Controller utilities */
+    {_cmd_controlAllocation, "getAllocatedControl", "x1 x2 x3", "Returns allocated control given state inputs."},
+    {_cmd_updateControl, "getControl", "x1 x2 x3", "Returns control given state inputs."},
+    {_cmd_updateControl_w_integrator, "getControlwIntegrator", "x1 x2 x3 integratorState", "Returns control given state inputs."},
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
@@ -153,6 +169,59 @@ static void _cmd_battVoltage(int argc, char *argv[]) {
     UNUSED(argc);
     printf("%f\n", batt_voltage_read());
 
+}
+
+static void _cmd_accXLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: accXLog\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < 5000U) {
+        IMU_read();
+        printf("%f\n", get_accX());
+        HAL_Delay(100);
+    }
+}
+
+static void _cmd_accZLog(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: accZLog\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < 5000U) {
+        IMU_read();
+        printf("%f\n", get_accZ());
+        HAL_Delay(100);
+    }
+}
+
+static void _cmd_swing_test_log(int argc, char *argv[])
+{
+    UNUSED(argv);
+    if (argc != 1) {
+        printf("Usage: swing_test_log\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < SWING_TEST_DURATION_MS) {
+        IMU_read();
+        float relative_time = (HAL_GetTick() - start) / 1000.0f;
+        printf("%f,%" PRId32 ",%f,%f\n",
+               relative_time,
+               right_motor_encoder_getValue(),
+               get_acc_angle(),
+               get_gyroY());
+        HAL_Delay(10);
+    }
 }
 
 static void _print_chip_pinout(void);
