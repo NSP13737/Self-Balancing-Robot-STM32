@@ -54,6 +54,7 @@ SRC_STM = \
 	$(SRCDIR)/IMU.c \
 	$(SRCDIR)/extra_pin.c \
 	$(SRCDIR)/controller.c \
+	$(SRCDIR)/control_allocation.c \
 	$(SRCDIR)/qpas_sub_noblas.c
 
 SRC_MPU6050LIB = \

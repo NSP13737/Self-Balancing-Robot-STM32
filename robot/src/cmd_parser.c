@@ -30,7 +30,10 @@ static void _cmd_battVoltage(int argc, char *argv[]);
 #include "motor_cmds.h"
 #include "batt_voltage.h"
 #include "controller.h"
+#include "control_allocation.h"
 static void _cmd_updateControl(int argc, char *argv[]);
+static void _cmd_updateControl_w_integrator(int argc, char *argv[]);
+static void _cmd_controlAllocation(int argc, char *argv[]);
 
 // Command table
 static CMD_T cmd_table[] =
@@ -47,8 +50,11 @@ static CMD_T cmd_table[] =
     {motor_sine         , "motorSine"       , "[left|right]", "Runs a 0-75% sine duty cycle for 10 seconds (2 s period)."},
     {motor_sine_log     , "motorSineLog"    , "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
     {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
+    {setVel              , "setVel"          , "[left|right] [speed_rad_s]", "Controls the selected wheel to the requested rad/s speed for 5 seconds."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
-    {_cmd_updateControl      , "getControl"   , "x1 x2 x3 x4"              , "Returns control given state inputs."} ,
+    {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
+    {_cmd_controlAllocation  , "getAllocatedControl", "x1 x2 x3"        , "Returns allocated control given state inputs."} ,
+    {_cmd_updateControl_w_integrator      , "getControlwIntegrator"   , "x1 x2 x3 integratorState"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
@@ -79,7 +85,7 @@ static void _cmd_rightEncoderLog(int argc, char *argv[])
 static void _cmd_updateControl(int argc, char *argv[])
 {
     // Check for correct input arguments
-    if(argc != 5)
+    if(argc != 4)
     {
         printf("Incorrect arguments\n");
     }
@@ -89,13 +95,56 @@ static void _cmd_updateControl(int argc, char *argv[])
         ctrl_set_x1(atof(argv[1]));
         ctrl_set_x2(atof(argv[2]));
         ctrl_set_x3(atof(argv[3]));
-        ctrl_set_x4(atof(argv[4]));
         /* Update controller value */
         ctrl_update();
         /* Print control action */
         printf("%f\n", getControl());
     }
 }
+
+static void _cmd_updateControl_w_integrator(int argc, char *argv[])
+{
+    // Check for correct input arguments
+    if(argc != 4)
+    {
+        printf("Incorrect arguments\n");
+    }
+    else
+    {
+        /* Update states using ctrl_set_xi functions */
+        ctrl_set_x1(atof(argv[1]));
+        ctrl_set_x2(atof(argv[2]));
+        ctrl_set_x3(atof(argv[3]));
+        /* Update controller value */
+        ctrl_update();
+        /* Print control action */
+        printf("%f,%f\n", getControl(), ctrl_get_z_state());
+    }
+}
+
+static float prev_wheel_state = 0;
+static float current_vel = 0;
+static void _cmd_controlAllocation(int argc, char *argv[])
+{
+    if (argc != 4)
+    {
+        printf("Incorrect arguments\n");
+        return;
+    }
+
+    /* Update states and calculate the LQR control output, as getControl does. */
+    ctrl_set_x1(atof(argv[1]));
+    ctrl_set_x2(atof(argv[2]));
+    ctrl_set_x3(atof(argv[3]));
+    ctrl_update();
+
+    
+    printf("%f\n", controlAllocation(getControl(), current_vel, 0.005f));
+    current_vel = (ctrl_get_x1() - prev_wheel_state) / 0.005f; // Scale vel by sample time
+    prev_wheel_state = ctrl_get_x1();
+}
+
+
 
 static void _cmd_battVoltage(int argc, char *argv[]) {
     UNUSED(argv);

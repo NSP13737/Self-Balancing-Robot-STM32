@@ -7,7 +7,7 @@
 #include <math.h>
 
 #define MOTOR_VELOCITY_SAMPLE_MS 5U
-#define MOTOR_VELOCITY_WINDOW 5U
+#define MOTOR_VELOCITY_WINDOW 3U
 #define MOTOR_PI 3.14159265358979323846f
 
 static uint8_t _left_motor_is_init = 0;
@@ -186,6 +186,24 @@ float motor_get_voltage(Motor motor)
     return (batt_v > 0) ? ((batt_v-get_driver_v_drop(motor))* signed_dc / 100.0f) : ((batt_v+get_driver_v_drop(motor))* signed_dc / 100.0f);
 }
 
+void voltage_motor_control(Motor motor, float desired_motor_voltage) {
+    float battery_voltage = batt_voltage_read();
+    if (desired_motor_voltage == 0.0f) {
+        motor_set_dc(motor, 0);
+        return;
+    }
+
+    // compensate for the motor driver's voltage drop before converting to PWM
+    float voltage_magnitude = fabsf(desired_motor_voltage);
+    float voltage_pre_driver = voltage_magnitude + get_driver_v_drop(motor);
+    float duty_percent = (voltage_pre_driver / battery_voltage) * 100.0f;
+    if (duty_percent > 100.0f) duty_percent = 100.0f;
+
+    motor_set_direction(motor, (desired_motor_voltage >= 0.0f) ?
+                        MOTOR_DIR_FWD : MOTOR_DIR_BWD);
+    motor_set_dc(motor, (int)(duty_percent + 0.5f));
+}
+
 float get_driver_v_drop(Motor motor) {
     float (*get_current)(void) = (motor == MOTOR_LEFT) ? left_current_read : right_current_read;
     return 1.4f+(1.15f*fabs(get_current())); // We want this to be in abs val bc sign is handled by motor_get_voltage
@@ -344,12 +362,12 @@ int32_t right_motor_encoder_getValue(void) {
     return right_encoder_count;
 }
 
-float left_motor_velocity_rad_s(void)
+float get_left_motor_velocity_rad_s(void)
 {
     return left_velocity_rad_s;
 }
 
-float right_motor_velocity_rad_s(void)
+float get_right_motor_velocity_rad_s(void)
 {
     return right_velocity_rad_s;
 }
