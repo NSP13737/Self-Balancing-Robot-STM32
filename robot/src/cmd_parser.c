@@ -121,6 +121,8 @@ static void _cmd_updateControl_w_integrator(int argc, char *argv[])
     }
 }
 
+static float prev_wheel_state = 0;
+static float current_vel = 0;
 static void _cmd_controlAllocation(int argc, char *argv[])
 {
     if (argc != 4)
@@ -135,8 +137,10 @@ static void _cmd_controlAllocation(int argc, char *argv[])
     ctrl_set_x3(atof(argv[3]));
     ctrl_update();
 
-    /* x2 is the measured velocity; controller state updates at 5 ms. */
-    printf("%f\n", controlAllocation(getControl(), (float)atof(argv[2]), 0.005f));
+    
+    printf("%f\n", controlAllocation(getControl(), current_vel, 0.005f));
+    current_vel = (ctrl_get_x1() - prev_wheel_state) / 0.005f; // Scale vel by sample time
+    prev_wheel_state = ctrl_get_x1();
 }
 
 static void _cmd_battVoltage(int argc, char *argv[]) {

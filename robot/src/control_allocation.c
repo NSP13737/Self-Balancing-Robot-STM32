@@ -1,7 +1,7 @@
 #include "batt_voltage.h"
 
 #define Kp 0.8 // pre-tuned gain
-#define INTEGRATOR_SCALAR 18.181818181 // pre-tuned integral scalar (Kp/T_c)
+#define INTEGRATOR_SCALAR 181.818181818 // pre-tuned integral scalar (Kp/T_c)
 
 float controlAllocation(float LQR_vel, float current_vel, float sample_period) {
     static float z = 0; // state of integrator

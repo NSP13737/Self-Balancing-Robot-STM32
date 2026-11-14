@@ -65,6 +65,12 @@ void ctrl_set_x1(float x1)
     ctrl_x_f32[0] = x1;
 }
 
+float ctrl_get_x1(void)
+{
+    // Get state x1
+    return ctrl_x_f32[0];
+}
+
 void ctrl_set_x2(float x2)
 {
     // Update state x2
