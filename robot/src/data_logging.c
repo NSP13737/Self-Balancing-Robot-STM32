@@ -172,7 +172,7 @@ static void imu_kf_log_data(void)
 
     IMU_read();
     imu_angle = (float)get_acc_angle();
-    imu_ang_velo = get_gyroX();
+    imu_ang_velo = get_gyroY();
     kalman_update(imu_angle, imu_ang_velo, kalman_state);
 
     /* Kalman state is [angular velocity, angle, gyro bias]. */

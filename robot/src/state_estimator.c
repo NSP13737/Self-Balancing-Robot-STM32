@@ -133,7 +133,7 @@ void get_state_estimate(float *stateMat[])
                   + get_right_motor_position_rad()) / 2.0f;
 
     
-    kalman_update((float)get_acc_angle(), get_gyroX(), xp);
+    kalman_update((float)get_acc_angle(), get_gyroY(), xp);
     *stateMat[1] = xp[1];
     *stateMat[2] = get_p_theta(xp[1], xp[2]);
 }
