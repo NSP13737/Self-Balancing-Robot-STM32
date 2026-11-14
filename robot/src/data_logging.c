@@ -108,7 +108,7 @@ static void encoder_log_data(void) {
 
 static void velocity_log_data(void) {
     printf("Left: %f | Right: %f\n",
-           left_motor_velocity_rad_s(), right_motor_velocity_rad_s());
+           get_left_motor_velocity_rad_s(), get_right_motor_velocity_rad_s());
     logCount++;
     if (logCount >= (VELOCITY_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
@@ -120,7 +120,7 @@ static void motor_sine_log_data(void) {
     float voltage = motor_get_voltage(sine_log_motor);
     float current = (sine_log_motor == MOTOR_LEFT) ? left_current_read() : right_current_read();
     float velocity = (sine_log_motor == MOTOR_LEFT) ?
-                     left_motor_velocity_rad_s() : right_motor_velocity_rad_s();
+                     get_left_motor_velocity_rad_s() : get_right_motor_velocity_rad_s();
     float pc3_pin_voltage = extra_pin_read();
     float torque = 0.3577f * (pc3_pin_voltage - 1.6337f);
 

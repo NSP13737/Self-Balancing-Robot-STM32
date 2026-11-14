@@ -50,6 +50,7 @@ static CMD_T cmd_table[] =
     {motor_sine         , "motorSine"       , "[left|right]", "Runs a 0-75% sine duty cycle for 10 seconds (2 s period)."},
     {motor_sine_log     , "motorSineLog"    , "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
     {motor_dc_log        , "motorDCLog"      , "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
+    {setVel              , "setVel"          , "[left|right] [speed_rad_s]", "Controls the selected wheel to the requested rad/s speed for 5 seconds."},
     {current_log          , "currentLog"       , "[left|right]",    "Gets current logs"},
     {_cmd_updateControl      , "getControl"   , "x1 x2 x3"              , "Returns control given state inputs."} ,
     {_cmd_controlAllocation  , "getAllocatedControl", "x1 x2 x3"        , "Returns allocated control given state inputs."} ,
@@ -142,6 +143,8 @@ static void _cmd_controlAllocation(int argc, char *argv[])
     current_vel = (ctrl_get_x1() - prev_wheel_state) / 0.005f; // Scale vel by sample time
     prev_wheel_state = ctrl_get_x1();
 }
+
+
 
 static void _cmd_battVoltage(int argc, char *argv[]) {
     UNUSED(argv);

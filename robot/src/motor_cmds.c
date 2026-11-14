@@ -7,6 +7,11 @@
 #include "stm32f4xx_hal.h"
 #include "cmsis_os2.h"
 #include "data_logging.h"
+#include "control_allocation.h"
+#include "current_sens.h"
+
+#define SPEED_CONTROL_SAMPLE_MS 5U
+#define SPEED_CONTROL_DURATION_MS 5000U
 
 static int parse_motor(const char *name, Motor *motor)
 {
@@ -168,4 +173,43 @@ void motor_dc_log(int argc, char *argv[])
 
     motor_sine_logging_start(motor);
     run_motor_dc_stages(motor);
+}
+
+
+void setVel(int argc, char *argv[]) {
+    if (argc != 3) {
+        printf("Usage: setVel <left|right> <speed_rad_s>\n");
+        return;
+    }
+
+    Motor motor;
+    if (!parse_motor(argv[1], &motor)) {
+        return;
+    }
+
+    char *end = NULL;
+    float target_velocity = strtof(argv[2], &end);
+    if (end == argv[2] || *end != '\0' || !isfinite(target_velocity)) {
+        printf("Speed must be a finite number in rad/s\n");
+        return;
+    }
+
+    uint32_t start = HAL_GetTick();
+    while ((uint32_t)(HAL_GetTick() - start) < SPEED_CONTROL_DURATION_MS) {
+        float measured_velocity = (motor == MOTOR_LEFT) ?
+            get_left_motor_velocity_rad_s() : get_right_motor_velocity_rad_s(); 
+        printf("%f,%f,%d\n",
+            measured_velocity,
+            (motor == MOTOR_LEFT) ? left_current_read() : right_current_read(),
+            motor_get_dc(motor) );
+
+        float desired_voltage = controlAllocation(
+            target_velocity, measured_velocity,
+            SPEED_CONTROL_SAMPLE_MS / 1000.0f);
+        voltage_motor_control(motor, desired_voltage);
+        osDelay(SPEED_CONTROL_SAMPLE_MS);
+    }
+
+    /* Leave the selected motor stopped when the timed control run ends. */
+    voltage_motor_control(motor, 0.0f);
 }
