@@ -11,11 +11,13 @@
 #include "data_logging.h"
 #include "IMU.h"
 #include "motor.h"
+#include "state_estimator.h"
 
 #define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
 #define MOTOR_LOG_DURATION_SECONDS 3U
 #define VELOCITY_LOG_DURATION_SECONDS 5U
 #define MOTOR_SINE_LOG_DURATION_SECONDS 20U
+#define STATE_ESTIMATE_LOG_DURATION_SECONDS 5U
 
 uint16_t logCount;
 
@@ -32,6 +34,8 @@ static void log_pointer(void *argument); // The param (void *argument) is requir
 static void encoder_log_data(void);
 static void velocity_log_data(void);
 static void motor_sine_log_data(void);
+static void state_estimate_log_data(void);
+static void imu_kf_log_data(void);
 void logging_start(void *log_function_ptr);
 
 void logging_init(void) {
@@ -129,6 +133,69 @@ static void motor_sine_log_data(void) {
     if (logCount >= (MOTOR_SINE_LOG_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
     }
+}
+
+static void state_estimate_log_data(void)
+{
+    float state0, state1, state2;
+    float *state[3] = {&state0, &state1, &state2};
+    float time_seconds = ((float)logCount * TIMER_PERIOD_MS) / 1000.0f;
+
+    IMU_read();
+    get_state_estimate(state);
+    printf("%f,%f,%f,%f\n", time_seconds, state0, state1, state2);
+
+    logCount++;
+    if (logCount >= (STATE_ESTIMATE_LOG_DURATION_SECONDS * 1000U /
+                     (uint32_t)TIMER_PERIOD_MS)) {
+        logging_stop();
+    }
+}
+
+void state_estimate_log(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        printf("Usage: stateEstimateLog\n");
+        return;
+    }
+
+    logging_start(&state_estimate_log_data);
+}
+
+static void imu_kf_log_data(void)
+{
+    float kalman_state[3];
+    float imu_angle;
+    float imu_ang_velo;
+    float time_seconds = ((float)logCount * TIMER_PERIOD_MS) / 1000.0f;
+
+    IMU_read();
+    imu_angle = (float)get_acc_angle();
+    imu_ang_velo = get_gyroX();
+    kalman_update(imu_angle, imu_ang_velo, kalman_state);
+
+    /* Kalman state is [angular velocity, angle, gyro bias]. */
+    printf("%f,%f,%f,%f,%f\n", time_seconds, imu_angle, imu_ang_velo,
+           kalman_state[1], kalman_state[0] + kalman_state[2]);
+
+    logCount++;
+    if (logCount >= (STATE_ESTIMATE_LOG_DURATION_SECONDS * 1000U /
+                     (uint32_t)TIMER_PERIOD_MS)) {
+        logging_stop();
+    }
+}
+
+void imu_kf_log(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        printf("Usage: imuKFLog\n");
+        return;
+    }
+
+    kalman_init();
+    logging_start(&imu_kf_log_data);
 }
 
 void motor_sine_logging_start(Motor motor)

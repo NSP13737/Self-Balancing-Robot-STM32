@@ -56,6 +56,8 @@ static CMD_T cmd_table[] =
     {_cmd_controlAllocation  , "getAllocatedControl", "x1 x2 x3"        , "Returns allocated control given state inputs."} ,
     {_cmd_updateControl_w_integrator      , "getControlwIntegrator"   , "x1 x2 x3 integratorState"              , "Returns control given state inputs."} ,
     {_cmd_battVoltage     , "battV"   , ""              , "Returns battery voltage."} ,
+    {state_estimate_log, "stateEstimateLog", "", "Log time and estimated states for 5 seconds."},
+    {imu_kf_log, "imuKFLog", "", "Log raw IMU and Kalman angle and angular velocity for 5 seconds."},
 };
 enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)

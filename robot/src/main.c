@@ -13,6 +13,7 @@
 #include "data_logging.h"
 #include "IMU.h"
 #include "controller.h"
+#include "state_estimator.h"
 
 static void SystemClock_Config(void);
 static void Error_Handler(void);
@@ -37,6 +38,7 @@ int main(void)
     logging_init();
     IMU_init();
     ctrl_init();
+    kalman_init();
 
     // Initialise task modules
     heartbeat_task_init();

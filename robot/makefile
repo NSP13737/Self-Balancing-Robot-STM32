@@ -52,6 +52,7 @@ SRC_STM = \
 	$(SRCDIR)/batt_voltage.c \
 	$(SRCDIR)/data_logging.c \
 	$(SRCDIR)/IMU.c \
+	$(SRCDIR)/state_estimator.c \
 	$(SRCDIR)/extra_pin.c \
 	$(SRCDIR)/controller.c \
 	$(SRCDIR)/control_allocation.c \

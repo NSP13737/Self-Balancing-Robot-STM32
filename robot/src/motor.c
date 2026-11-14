@@ -358,8 +358,15 @@ int32_t left_motor_encoder_getValue(void) {
     return left_encoder_count;
 }
 
+float get_left_motor_position_rad(void) {
+    return left_encoder_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
+}
+
 int32_t right_motor_encoder_getValue(void) {
     return right_encoder_count;
+}
+float get_right_motor_position_rad(void) {
+    return right_encoder_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
 }
 
 float get_left_motor_velocity_rad_s(void)

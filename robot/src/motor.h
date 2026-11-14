@@ -33,6 +33,7 @@ void left_motor_encoder_init(void);
 void EXTI4_IRQHandler(void);
 void EXTI9_5_IRQHandler(void);
 int32_t left_motor_encoder_getValue(void);
+float get_left_motor_position_rad(void);
 void motor_velocity_set_counts_per_wheel_rev(float counts_per_wheel_rev);
 void motor_velocity_init(void);
 float get_left_motor_velocity_rad_s(void);
@@ -46,6 +47,7 @@ void right_motor_no_dir(void);
 void right_motor_encoder_init(void);
 void EXTI15_10_IRQHandler(void);
 int32_t right_motor_encoder_getValue(void);
+float get_right_motor_position_rad(void);
 
 float get_driver_v_drop(Motor motor);
 

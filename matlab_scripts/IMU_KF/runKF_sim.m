@@ -94,7 +94,7 @@ function [x_KF, P_KF] = runKF(angle_accel, velocity_gyro, N, params)
     for i=1:N
         yi = [angle_accel(i); velocity_gyro(i)];
         % Correction step
-        Kk = Pm*C.' * inv(C*Pm*C.' + R);
+        Kk = Pm*C.' * inv(C*Pm*C.' + R)h 
         xp = xm + (Kk*(yi - (C*xm)));
         Pp = Pm - (Pm*C.' * inv(C*Pm*C.' + R) * C*Pm);
         % Prediction step
