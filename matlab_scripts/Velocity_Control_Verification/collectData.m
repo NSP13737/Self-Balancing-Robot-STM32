@@ -2,8 +2,8 @@ clear
 clc
 
 % Configure the motor and target speed (rad/s) for this run.
-motor_name = "right";
-target_speed_rad_s = -15.0;
+motor_name = "left";
+target_speed_rad_s = 7.0;
 
 % setVel prints velocity,current,duty_cycle as comma-separated values every 5 ms.
 sample_period_s = 0.005;

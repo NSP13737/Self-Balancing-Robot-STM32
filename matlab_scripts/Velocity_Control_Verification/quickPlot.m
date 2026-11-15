@@ -2,17 +2,26 @@ clear
 clc
 close all
 
-load('left_SetVel_5.00_rad_s_20261114_150323.mat');
-
-
-% Unpack data
-time = motor.time;
-velocity = motor.velocity;
+mat_filename = 'left_SetVel_7.00_rad_s_20261115_235635.mat';
+load(mat_filename);
 
 figure;
-t = tiledlayout(1, 1, 'TileSpacing', 'compact');
+tiledlayout(3, 1);
 
-
-plot(time, velocity, 'LineWidth', 1.2);
+nexttile;
+plot(motor.time, motor.velocity, 'LineWidth', 1.2);
 ylabel('Velocity [rad/s]');
 grid on;
+
+nexttile;
+plot(motor.time, motor.current, 'LineWidth', 1.2);
+ylabel('Current [A]');
+grid on;
+
+nexttile;
+plot(motor.time, motor.duty_cycle, 'LineWidth', 1.2);
+ylabel('Duty Cycle [%]');
+xlabel('Time [s]');
+grid on;
+
+sgtitle(mat_filename, 'Interpreter', 'none');

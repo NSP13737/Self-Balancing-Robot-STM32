@@ -61,4 +61,12 @@ It doesn't seem that far off...
 
 I'm lowering the sensor noise anyway
 
+# Seeing if I can get velocity control to be faster
+It's obviously not correctly setting the velocity
+![[Pasted image 20261115235320.png]]
+Same on the left
+![[Pasted image 20261115235437.png]]
+Actually that was just bc the integrator kept its state from other things the robot was doing
+![[Pasted image 20261115235730.png]]
+Now it's fixed.
 
