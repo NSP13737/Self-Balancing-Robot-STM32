@@ -2,9 +2,9 @@
 #define TUNING_PARAMETERS_H
 
 /* Control allocation gains. */
-#define TUNING_KP 0.8f
-#define TUNING_INTEGRATOR_SCALAR 2.27272727273f
-//#define TUNING_INTEGRATOR_SCALAR 0.0f
+#define TUNING_KP 1.2f
+//#define TUNING_INTEGRATOR_SCALAR 2.27272727273f
+#define TUNING_INTEGRATOR_SCALAR 0.0f
 
 /* Shared control and sampling period. Keep integral/state-space gains tuned for this period. */
 #define TUNING_SAMPLE_PERIOD_MS 5U
@@ -28,9 +28,9 @@
 // #define TUNING_CTRL_MK_2 22.355953248794705f
 // #define TUNING_CTRL_MK_3 0.0f
 
-#define TUNING_CTRL_MK_0 4.4921f
-#define TUNING_CTRL_MK_1 9.967726608934711f
-#define TUNING_CTRL_MK_2 22.355953248794705f
+#define TUNING_CTRL_MK_0 0.0f
+#define TUNING_CTRL_MK_1 90.967726608934711f
+#define TUNING_CTRL_MK_2 90.355953248794705f
 #define TUNING_CTRL_MK_3 0.0f
 
 #define TUNING_CTRL_AZ_0 0.005f

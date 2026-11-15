@@ -70,3 +70,11 @@ Actually that was just bc the integrator kept its state from other things the ro
 ![[Pasted image 20261115235730.png]]
 Now it's fixed.
 
+Trying to make it faster by adjusting Kp to 1.2
+![[Pasted image 20261116000231.png]]
+
+I mean this definitely seems to help
+
+Testing some new K vals
+![[Pasted image 20261116001543.png]]
+

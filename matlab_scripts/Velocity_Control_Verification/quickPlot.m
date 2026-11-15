@@ -2,7 +2,7 @@ clear
 clc
 close all
 
-mat_filename = 'left_SetVel_7.00_rad_s_20261115_235635.mat';
+mat_filename = 'left_SetVel_7.00_rad_s_20261116_000143.mat';
 load(mat_filename);
 
 figure;
