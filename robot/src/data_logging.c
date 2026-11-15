@@ -337,6 +337,8 @@ static void control_loop_log_data(void) {
     if (logCount >= (CONTROL_LOOP_DURATION_SECONDS * 1000U /
                      (uint32_t)TIMER_PERIOD_MS)) {
         logging_stop();
+        setRightMotorDC(0.0f);
+        setLeftMotorDC(0.0f);
     }
 }
 
