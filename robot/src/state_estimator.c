@@ -136,13 +136,14 @@ void get_state_estimate(float *stateMat[])
                   + get_right_motor_position_rad()) / 2.0f;
 
     IMU_read();
-    // kalman_update((float)get_acc_angle(), get_gyroY(), xp);
-    // *stateMat[1] = xp[1];
-    // *stateMat[2] = get_p_theta(xp[1], xp[2]);
+    kalman_update((float)get_acc_angle(), get_gyroY(), xp);
+    *stateMat[1] = xp[1];
+    *stateMat[2] = get_p_theta(xp[1], xp[2]);
 
-    float raw_angle = get_acc_angle();
-    float raw_gyro = get_gyroY();
+    /* USE THIS IF YOU WANT TO USE RAW IMU VALS */
+    // float raw_angle = get_acc_angle();
+    // float raw_gyro = get_gyroY();
 
-    *stateMat[1] = raw_angle;
-    *stateMat[2] = get_p_theta(raw_angle, raw_gyro);
+    // *stateMat[1] = raw_angle;
+    // *stateMat[2] = get_p_theta(raw_angle, raw_gyro);
 }

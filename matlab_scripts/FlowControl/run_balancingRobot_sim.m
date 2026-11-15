@@ -74,9 +74,9 @@ T = 1/200;
 C_r = [1 0 0];
 D_r = 0;
 
-Q_int = diag([2 1 1 1])
+Q_int = diag([10 1 1 1])
 Q = diag([10 1 1 1]);
-R = 0.6
+R = 0.1
 N_int = zeros(4,1);
 N = zeros(4,1);
 

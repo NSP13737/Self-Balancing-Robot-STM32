@@ -31,7 +31,32 @@ Tuning Kp
 ![[Pasted image 20261115223333.png]]
 I finally got something that works in simulation
 
-Now I'm going to implement a min magnitude for voltage and see how it does from there, but lowkey just from looking at this I can tell it's not going to work...
+Now I'm going to implement a min magnitude for voltage and see how it does from there, but lowkey just from looking at this I can tell it's not going to work... (I didn't end up doing that and decided it would be best to just figure out why the actual implementation is blowing up)
 
+# Back to figuring out why robot is blowing up
+Here's my initial starting point
+![[Pasted image 20261115224817.png]]
+I tried just tuning the integrator to 0 which didn't help
+![[Pasted image 20261115224958.png]]
+Now I'll try reversing the sign of the LQR even though it should be right...
+![[Pasted image 20261115225344.png]]
+WAYYYYY BETTER (wtf why is it negative....)
+
+Now going to test on the ground (with me holding it)
+![[Pasted image 20261115225543.png]]This looks good but just because I was holding it. It is..... in fact..... now going backwards..... meaning the negative sign wasn't the issue
+
+I change ctrl_mk_3 to be 0 so that LQR doesn't track integral state
+![[Pasted image 20261115230502.png]]
+but no luck
+
+Here I just force ctrl_mk_0 to be 0 so that the control of LQR basically doesn't care about the position of the motors
+![[Pasted image 20261115231321.png]]
+That seems to have done something at least. 
+I'll try running it on the ground from here
+
+I'm going to reimplement the kalman filter
+Here I have it on the ground and am supporting it
+![[Pasted image 20261115233320.png]]
+It doesn't seem that far off...
 
 

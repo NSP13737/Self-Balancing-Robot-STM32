@@ -9,6 +9,7 @@
 #include "cmd_parser.h"
 #include "motor.h"
 #include "IMU.h"
+#include "tuning_parameters.h"
 
 #define SWING_TEST_DURATION_MS 20000U
 

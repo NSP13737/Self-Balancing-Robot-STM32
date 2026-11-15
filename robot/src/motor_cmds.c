@@ -9,6 +9,7 @@
 #include "data_logging.h"
 #include "control_allocation.h"
 #include "current_sens.h"
+#include "tuning_parameters.h"
 
 #define SPEED_CONTROL_SAMPLE_MS TUNING_SAMPLE_PERIOD_MS
 #define SPEED_CONTROL_DURATION_MS 5000U
