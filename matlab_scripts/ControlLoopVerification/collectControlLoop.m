@@ -1,5 +1,6 @@
 clear
 clc
+close all
 
 % controlLoopLog emits 32 CSV fields at 200 Hz for 5 seconds.
 sample_period_s = 0.005;
@@ -7,7 +8,9 @@ expected_samples = 5 / sample_period_s;
 field_count = 32;
 csv_format = [repmat('%f,', 1, field_count - 1), '%f'];
 
-stm_device = serialport('COM3', 115200, 'Timeout', 0.5);
+% The firmware collects samples before sending them, then streams the full
+% 32-column capture. Allow the initial 5 s quiet period and the slower transfer.
+stm_device = serialport('COM3', 115200, 'Timeout', 10.0);
 configureTerminator(stm_device, "LF");
 cleanupObj = onCleanup(@() clear('stm_device')); %#ok<NASGU>
 
@@ -22,14 +25,14 @@ writeline(stm_device, "controlLoopLog");
 data = zeros(expected_samples, field_count);
 k = 0;
 t0 = tic;
-collection_timeout_s = 8.0;
+collection_timeout_s = 60.0;
+
 while k < expected_samples && toc(t0) < collection_timeout_s
     rxStr = readline(stm_device);
     values = sscanf(char(rxStr), csv_format);
     if numel(values) ~= field_count || any(~isfinite(values))
         continue;
     end
-
     k = k + 1;
     data(k, :) = values(:)';
 end
@@ -72,8 +75,20 @@ fprintf('Saved %d of %d expected control-loop samples to %s\n', ...
 
 clear stm_device
 
+[~, name, ext] = fileparts(fname);
+display_filename = [name, ext];
+
+tuning_text = sprintf(['Kp=%g | Integrator=%g | mK=[%g, %g, %g, %g] | ', ...
+    'Az=[%g, %g, %g, %g] | Q=diag([%g, %g, %g, %g]) | R=%g'], ...
+    control_loop.tuning.Kp, control_loop.tuning.integrator_scalar, ...
+    control_loop.tuning.mK, control_loop.tuning.Az, ...
+    control_loop.tuning.Q_diag, control_loop.tuning.R);
+
+title_text = {display_filename, tuning_text};
+
+% Figure 1: Estimated states and control action
 figure;
-tiledlayout(7, 1);
+tiledlayout(2, 1);
 
 nexttile;
 plot(control_loop.time, control_loop.wheel_state, 'LineWidth', 1.2);
@@ -89,8 +104,15 @@ plot(control_loop.time, control_loop.lqr_action, 'LineWidth', 1.2);
 hold on;
 plot(control_loop.time, control_loop.allocated_voltage, 'LineWidth', 1.2);
 ylabel('Control');
+xlabel('Time [s]');
 legend('LQR action', 'Allocated voltage', 'Location', 'best');
 grid on;
+
+sgtitle(title_text, 'Interpreter', 'none');
+
+% Figure 2: Raw IMU, current, voltage, velocity, and encoder position
+figure;
+tiledlayout(5, 1);
 
 nexttile;
 plot(control_loop.time, control_loop.raw_imu_angle, 'LineWidth', 1.2);
@@ -107,13 +129,6 @@ plot(control_loop.time, control_loop.right_current, 'LineWidth', 1.2);
 ylabel('Current [A]');
 legend('Left', 'Right', 'Location', 'best');
 grid on;
-
-title_text = sprintf(['Kp=%g | Integrator=%g | mK=[%g, %g, %g, %g] | ', ...
-    'Az=[%g, %g, %g, %g] | Q=diag([%g, %g, %g, %g]) | R=%g'], ...
-    control_loop.tuning.Kp, control_loop.tuning.integrator_scalar, ...
-    control_loop.tuning.mK, control_loop.tuning.Az, ...
-    control_loop.tuning.Q_diag, control_loop.tuning.R);
-sgtitle(title_text, 'Interpreter', 'none');
 
 nexttile;
 plot(control_loop.time, control_loop.left_voltage, 'LineWidth', 1.2);
@@ -140,3 +155,5 @@ ylabel('Encoder [rad]');
 xlabel('Time [s]');
 legend('Left', 'Right', 'Location', 'best');
 grid on;
+
+sgtitle(title_text, 'Interpreter', 'none');

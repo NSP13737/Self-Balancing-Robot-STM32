@@ -22,6 +22,8 @@
 #define MOTOR_SINE_LOG_DURATION_SECONDS 20U
 #define STATE_ESTIMATE_LOG_DURATION_SECONDS 5U
 #define CONTROL_LOOP_DURATION_SECONDS 5U
+#define CONTROL_LOOP_SAMPLE_COUNT \
+    (CONTROL_LOOP_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)
 
 uint16_t logCount;
 
@@ -33,6 +35,29 @@ static int32_t (*encoder_read)(void);
 static float (*current_read)(void);
 static Motor sine_log_motor;
 
+/* Compact samples so the full five-second capture fits in MCU SRAM. */
+typedef struct {
+    int32_t wheel_state_mrad;
+    int16_t angle_state_10urad;
+    int16_t momentum_state_milli;
+    int32_t lqr_action_milli;
+    int16_t allocated_voltage_milli;
+    int16_t raw_imu_angle_10urad;
+    int16_t raw_imu_velocity_milli;
+    int16_t left_current_milli;
+    int16_t right_current_milli;
+    int16_t left_voltage_milli;
+    int16_t right_voltage_milli;
+    int16_t left_velocity_centi;
+    int16_t right_velocity_centi;
+    int16_t average_velocity_centi;
+    int32_t left_encoder_mrad;
+    int32_t right_encoder_mrad;
+} ControlLoopSample_t;
+
+static ControlLoopSample_t control_loop_samples[CONTROL_LOOP_SAMPLE_COUNT];
+static uint16_t control_loop_sample_count;
+
 /* Function Declarations */
 static void log_pointer(void *argument); // The param (void *argument) is required by FreeRTOS for timer callback
 static void encoder_log_data(void);
@@ -42,6 +67,24 @@ static void state_estimate_log_data(void);
 static void imu_kf_log_data(void);
 static void control_loop_log_data(void);
 void logging_start(void *log_function_ptr);
+
+static int16_t quantize_control_loop_value(float value, float scale)
+{
+    float scaled = value * scale;
+    if (scaled >= 32767.0f) return INT16_MAX;
+    if (scaled <= -32768.0f) return INT16_MIN;
+    scaled += (scaled >= 0.0f) ? 0.5f : -0.5f;
+    return (int16_t)scaled;
+}
+
+static int32_t quantize_wide_control_loop_value(float value, float scale)
+{
+    float scaled = value * scale;
+    if (scaled >= 2147483520.0f) return INT32_MAX;
+    if (scaled <= -2147483648.0f) return INT32_MIN;
+    scaled += (scaled >= 0.0f) ? 0.5f : -0.5f;
+    return (int32_t)scaled;
+}
 
 void logging_init(void) {
     if (_is_init) {
@@ -271,12 +314,11 @@ void control_loop_log(int argc, char *argv[])
         return;
     }
 
+    control_loop_sample_count = 0;
     logging_start(&control_loop_log_data);
 }
 
 static void control_loop_log_data(void) {
-    float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * logCount;
-
     /* Get state estimate */
     float wheel_state, angle_state, momentum_state;
     float *state[3] = {&wheel_state, &angle_state, &momentum_state};
@@ -312,33 +354,62 @@ static void control_loop_log_data(void) {
     float right_motor_voltage = motor_get_voltage(MOTOR_RIGHT);
     float left_motor_encoder = get_left_motor_position_rad();
     float right_motor_encoder = get_right_motor_position_rad();
-    /*
-     * CSV columns:
-     * time, wheel state, angle state, momentum state, LQR action,
-     * allocated voltage, raw IMU angle, raw IMU angular velocity,
-     * left current, right current, left voltage, right voltage,
-     * left velocity, right velocity, average velocity,
-     * left/right encoder position, Kp, integrator scalar, mK[4], Az[4],
-     * Q diagonal[4], R.
-     */
-    printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,"
-           "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
-           relative_time, wheel_state, angle_state, momentum_state,
-           lqr_control_action, control_allocated_action, raw_imu_angle,
-           raw_imu_velo, left_motor_current, right_motor_current,
-           left_motor_voltage, right_motor_voltage, left_wheel_vel,
-           right_wheel_vel, avg_wheel_vel, left_motor_encoder,
-           right_motor_encoder, TUNING_KP, TUNING_INTEGRATOR_SCALAR,
-           TUNING_CTRL_MK_0, TUNING_CTRL_MK_1, TUNING_CTRL_MK_2,
-           TUNING_CTRL_MK_3, TUNING_CTRL_AZ_0, TUNING_CTRL_AZ_1,
-           TUNING_CTRL_AZ_2, TUNING_CTRL_AZ_3, TUNING_Q_DIAG_0,
-           TUNING_Q_DIAG_1, TUNING_Q_DIAG_2, TUNING_Q_DIAG_3, TUNING_R);
+    ControlLoopSample_t *sample = &control_loop_samples[control_loop_sample_count];
+    sample->wheel_state_mrad = quantize_wide_control_loop_value(wheel_state, 1000.0f);
+    sample->angle_state_10urad = quantize_control_loop_value(angle_state, 10000.0f);
+    sample->momentum_state_milli = quantize_control_loop_value(momentum_state, 1000.0f);
+    sample->lqr_action_milli = quantize_wide_control_loop_value(lqr_control_action, 1000.0f);
+    sample->allocated_voltage_milli = quantize_control_loop_value(control_allocated_action, 1000.0f);
+    sample->raw_imu_angle_10urad = quantize_control_loop_value(raw_imu_angle, 10000.0f);
+    sample->raw_imu_velocity_milli = quantize_control_loop_value(raw_imu_velo, 1000.0f);
+    sample->left_current_milli = quantize_control_loop_value(left_motor_current, 1000.0f);
+    sample->right_current_milli = quantize_control_loop_value(right_motor_current, 1000.0f);
+    sample->left_voltage_milli = quantize_control_loop_value(left_motor_voltage, 1000.0f);
+    sample->right_voltage_milli = quantize_control_loop_value(right_motor_voltage, 1000.0f);
+    sample->left_velocity_centi = quantize_control_loop_value(left_wheel_vel, 100.0f);
+    sample->right_velocity_centi = quantize_control_loop_value(right_wheel_vel, 100.0f);
+    sample->average_velocity_centi = quantize_control_loop_value(avg_wheel_vel, 100.0f);
+    sample->left_encoder_mrad = quantize_wide_control_loop_value(left_motor_encoder, 1000.0f);
+    sample->right_encoder_mrad = quantize_wide_control_loop_value(right_motor_encoder, 1000.0f);
+
+    control_loop_sample_count++;
     logCount++;
-    if (logCount >= (CONTROL_LOOP_DURATION_SECONDS * 1000U /
-                     (uint32_t)TIMER_PERIOD_MS)) {
+    if (control_loop_sample_count >= CONTROL_LOOP_SAMPLE_COUNT) {
         logging_stop();
         setRightMotorDC(0.0f);
         setLeftMotorDC(0.0f);
+
+        /* Sampling is complete; send the buffered capture over UART now. */
+        for (uint16_t i = 0; i < control_loop_sample_count; ++i) {
+            const ControlLoopSample_t *row = &control_loop_samples[i];
+            float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * i;
+            printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,"
+                   "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+                   relative_time,
+                   row->wheel_state_mrad / 1000.0f,
+                   row->angle_state_10urad / 10000.0f,
+                   row->momentum_state_milli / 1000.0f,
+                   row->lqr_action_milli / 1000.0f,
+                   row->allocated_voltage_milli / 1000.0f,
+                   row->raw_imu_angle_10urad / 10000.0f,
+                   row->raw_imu_velocity_milli / 1000.0f,
+                   row->left_current_milli / 1000.0f,
+                   row->right_current_milli / 1000.0f,
+                   row->left_voltage_milli / 1000.0f,
+                   row->right_voltage_milli / 1000.0f,
+                   row->left_velocity_centi / 100.0f,
+                   row->right_velocity_centi / 100.0f,
+                   row->average_velocity_centi / 100.0f,
+                   row->left_encoder_mrad / 1000.0f,
+                   row->right_encoder_mrad / 1000.0f,
+                   TUNING_KP, TUNING_INTEGRATOR_SCALAR,
+                   TUNING_CTRL_MK_0, TUNING_CTRL_MK_1,
+                   TUNING_CTRL_MK_2, TUNING_CTRL_MK_3,
+                   TUNING_CTRL_AZ_0, TUNING_CTRL_AZ_1,
+                   TUNING_CTRL_AZ_2, TUNING_CTRL_AZ_3,
+                   TUNING_Q_DIAG_0, TUNING_Q_DIAG_1,
+                   TUNING_Q_DIAG_2, TUNING_Q_DIAG_3, TUNING_R);
+        }
     }
 }
 
