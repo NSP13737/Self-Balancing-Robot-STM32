@@ -13,6 +13,7 @@ void right_encoder_logging_start(void);
 void motor_velocity_log(int argc, char *argv[]);
 void state_estimate_log(int argc, char *argv[]);
 void imu_kf_log(int argc, char *argv[]);
+void control_loop_log(int argc, char *argv[]);
 void motor_sine_logging_start(Motor motor);
 void logging_stop(void);
 

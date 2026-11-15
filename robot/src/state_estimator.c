@@ -8,6 +8,8 @@
 #define B_STAR -0.9681f
 #define SAMPLE_PERIOD 0.005f
 
+static float get_p_theta(float ang_velo, float velo);
+
 static const float process_noise[3][3] = {
     { 0.2611f,  0.0223f, -0.0280f },
     { 0.0223f,  0.0021f, -0.0024f },
@@ -119,7 +121,7 @@ void kalman_update(float acc_angle, float gyro_velocity, float xp[3])
     }
 }
 
-float get_p_theta(float ang_velo, float velo)
+static float get_p_theta(float ang_velo, float velo)
 {
     return (ang_velo + (B_STAR * velo)) / A_STAR;
 }
@@ -132,7 +134,7 @@ void get_state_estimate(float *stateMat[])
     *stateMat[0] = (get_left_motor_position_rad()
                   + get_right_motor_position_rad()) / 2.0f;
 
-    
+    IMU_read();
     kalman_update((float)get_acc_angle(), get_gyroY(), xp);
     *stateMat[1] = xp[1];
     *stateMat[2] = get_p_theta(xp[1], xp[2]);

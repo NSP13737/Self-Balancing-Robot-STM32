@@ -11,6 +11,5 @@ void kalman_update(float acc_angle, float gyro_velocity, float xp[3]);
 
 void get_state_estimate(float *stateMat[]);
 
-float get_p_theta(float ang_velo, float velo);
 
 #endif

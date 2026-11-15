@@ -60,6 +60,7 @@ static CMD_T cmd_table[] =
     {motor_velocity_log, "motorVelocityLog", "", "Log left and right wheel velocity in rad/s for 5 seconds."},
     {current_log, "currentLog", "[left|right]", "Gets current logs"},
     {state_estimate_log, "stateEstimateLog", "", "Log time and estimated states for 5 seconds."},
+    {control_loop_log, "controlLoopLog", "", "Run the control loop and log states and motor measurements for 5 seconds."},
     {_cmd_swing_test_log, "swing_test_log", "", "Log right wheel encoder count, IMU angle, and angular velocity for 5 seconds."},
 
     /* Motor commands */

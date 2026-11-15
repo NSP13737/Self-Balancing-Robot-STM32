@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "stm32f4xx_hal.h"
 #include "arm_math.h"
+#include "tuning_parameters.h"
 
 #define CTRL_N_INPUT 1
 #define CTRL_N_STATE 4
@@ -10,7 +11,8 @@
 static float ctrl_mK_f32[CTRL_N_INPUT*CTRL_N_STATE] = 
 {
     // negative K, 1x4
-    4.492148056511271f, 9.967726608934711f, 22.355953248794705f, 1.274592539852193f
+    TUNING_CTRL_MK_0, TUNING_CTRL_MK_1,
+    TUNING_CTRL_MK_2, TUNING_CTRL_MK_3
 };
 
 static float ctrl_x_f32[CTRL_N_STATE] = 
@@ -31,7 +33,8 @@ static float ctrl_u_f32[CTRL_N_INPUT] =
 static float ctrl_Az_f32[CTRL_N_STATE] =
 {
     // state transition matrix 1x4
-    0.005, 0, 0, 1,
+    TUNING_CTRL_AZ_0, TUNING_CTRL_AZ_1,
+    TUNING_CTRL_AZ_2, TUNING_CTRL_AZ_3,
 
 };
 
