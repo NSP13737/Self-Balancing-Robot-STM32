@@ -1,4 +1,4 @@
-classdef classDCMotor
+classdef classDCMotor < handle
     properties
         Ra %armature resistance
         La %armature inductance
@@ -12,6 +12,8 @@ classdef classDCMotor
            % Jm is estimated from free wheel spin test
         b % motor friction? (for our model we will just take average of friction in both directions
         Kp % PI controller gain
+        Tm % the thing we divide the PI integrator gain by
+        Vlow % min magnitude of voltage required to get motors moving under normal weight
     end
 
     methods
@@ -65,13 +67,17 @@ classdef classDCMotor
                 V_in = obj.Vmax;
             elseif (V_in < obj.Vmin)
                 V_in = obj.Vmin;
+            % elseif (V_in < -obj.Vlow)
+            %     V_in = 0;
+            % elseif (V_in > obj.Vlow)
+            %     V_in = 0;
             end
             
 
         end
 
-        function Tm = get_motor_time_constant(obj)
-            Tm = (obj.Ra*obj.Jm) / (obj.N^2*obj.Ko*obj.Ki + obj.b*obj.Ra)
+        function set_motor_time_constant(obj)
+            obj.Tm = (obj.Ra*obj.Jm) / (obj.N^2*obj.Ko*obj.Ki + obj.b*obj.Ra);
         end
 
         function Vin = flowControlAllocation(obj, desired_vel, current_vel, sample_period)
@@ -84,7 +90,7 @@ classdef classDCMotor
             end
 
             %% Update z (integrator) state based on Roxy's equations
-            z = z + ( (obj.Kp*sample_period/obj.get_motor_time_constant()) * error_vel);
+            z = z + ( (obj.Kp*sample_period/obj.Tm) * error_vel);
 
             %%
             Vin = obj.Kp*error_vel + z;

@@ -55,14 +55,16 @@ motor.Ra = 7.39325; % avged between both motors
 motor.La = 0.1;
 motor.N = 30; % obvious
 motor.Td = 0.005;
-motor.Ko = 0.31185; % avged between both motors
+%NOTE THAT I CHANGED THIS DRASTICALLY
+motor.Ko = 0.013827; % 0.31185 avged between both motors
 motor.Ki = 0.0059; % avged between both motors
-motor.Vmax = 12;
-motor.Vmin =-12;
+motor.Vmax = 11.2;
+motor.Vmin =-11.2;
 motor.Jm = 0.0339; %avged between both motors
 % Note that b left_avg is 0.09445 and b right_avg is 0.05455
 motor.b = 0.0745; %avged between both motors on both sides
 motor.Kp = 0.8;
+motor.set_motor_time_constant();
 
 %% Cart Pole control
 controllerBalancingRobot = classDiscreteLQRcontrol;
@@ -127,6 +129,7 @@ for i = 1:length(t_sim)-1
     %% Get control input from LQR
     if ~PIL_bool
         desired_vel = controllerBalancingRobot.control(x0.');
+        desired_vel = 15;
         z_state = controllerBalancingRobot.z;
         %% Take ideal control and put through control allocation to Voltage
         V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
@@ -174,7 +177,7 @@ for i = 1:length(t_sim)-1
     res.lambda = [res.lambda; lambda(end)];
     %res.arm_current = [res.arm_current; motor.armature_current(lambda(end))];
     %res.t_m = [res.t_m; t_m];
-    %res.desired_vel = [res.desired_vel; desired_vel];
+    res.desired_vel = [res.desired_vel; desired_vel];
     res.output_vel = [res.output_vel; output_vel];
     %res.z_states = [res.z_states; z_state];
     res.debug_wheelVel = [res.debug_wheelVel; wheel_vel];
@@ -226,10 +229,10 @@ plot(res.t, solved_dp_phi_col)
 if runLinearSim
     hold on
     plot(resLin.t, solved_dp_phi_col_lin, '--')
-    legend('d\phi', 'd\phi (linear)')
+    legend('p_theta', 'd\phi (linear)')
     ylim([-4, 4])
 else
-    legend('d\phi')
+    legend('p_theta')
 end
 xlabel('Time [sec]')
 grid on
@@ -249,6 +252,27 @@ hold on
 legend('Applied Motor Voltage')
 xlabel('Time [sec]')
 grid on
+
+% Extract diagonal elements of Q_int (or Q, depending on which one you want displayed)
+q_diag = diag(Q_int); 
+
+% Format mK and Az assuming they are properties of controllerBalancingRobot
+mK_str = sprintf('%.5g, ', controllerBalancingRobot.K);
+mK_str = mK_str(1:end-2); % remove trailing comma and space
+
+Az_str = sprintf('%.5g, ', controllerBalancingRobot.A_z);
+Az_str = Az_str(1:end-2);
+
+% Build the title string
+title_str = sprintf('Kp=%.5g | Integrator=%.5f | K=[%s] | Az=[%s] | Q=diag([%d, %d, %d, %d]) | R=%.5g', ...
+    motor.Kp, ...
+    motor.Kp / motor.Tm, ...
+    mK_str, ...
+    Az_str, ...
+    q_diag(1), q_diag(2), q_diag(3), q_diag(4), ...
+    R);
+
+sgtitle(title_str, 'Interpreter', 'none');
 
 if read_integrator_z_val
     figure(2)
