@@ -6,7 +6,7 @@ clear classDCMotor
 %% Flag: set to true/false to include/exclude the linearized simulation
 runLinearSim = false;
 
-PIL_bool = 1;
+PIL_bool = 0;
 read_integrator_z_val = 0;
 
 if PIL_bool
@@ -59,9 +59,10 @@ motor.Ko = 0.31185; % avged between both motors
 motor.Ki = 0.0059; % avged between both motors
 motor.Vmax = 12;
 motor.Vmin =-12;
-motor.Jm = 0.001;
-motor.b = 0.001;
-motor.Kp = 0.8
+motor.Jm = 0.0339; %avged between both motors
+% Note that b left_avg is 0.09445 and b right_avg is 0.05455
+motor.b = 0.0745; %avged between both motors on both sides
+motor.Kp = 0.8;
 
 %% Cart Pole control
 controllerBalancingRobot = classDiscreteLQRcontrol;
