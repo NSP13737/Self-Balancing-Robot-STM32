@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <inttypes.h> // For PRIxx and SCNxx macros
+#include <math.h>
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "cmd_line_buffer.h"
 #include "cmd_parser.h"
@@ -29,6 +30,8 @@ static void _cmd_battVoltage(int argc, char *argv[]);
 static void _cmd_accXLog(int argc, char *argv[]);
 static void _cmd_accZLog(int argc, char *argv[]);
 static void _cmd_swing_test_log(int argc, char *argv[]);
+static void _cmd_motorSetVoltage(int argc, char *argv[]);
+static void _cmd_motorGetVoltage(int argc, char *argv[]);
 
 // Modules that provide commands
 #include "heartbeat_cmd.h"
@@ -70,6 +73,8 @@ static CMD_T cmd_table[] =
     {motor_sine_log, "motorSineLog", "[left|right]", "Runs the motor sine input and logs time, voltage, current, and velocity."},
     {motor_dc_log, "motorDCLog", "[left|right]", "Runs ten 2-second DC stages (10-90% FWD, then 10-90% BWD) and logs time, voltage, current, velocity, and torque."},
     {setVel, "setVel", "[left|right] [speed_rad_s]", "Controls the selected wheel to the requested rad/s speed for 5 seconds."},
+    {_cmd_motorSetVoltage, "motorSetVoltage", "[left|right] [voltage_v]", "Sets the selected motor voltage."},
+    {_cmd_motorGetVoltage, "motorGetVoltage", "[left|right]", "Returns the selected motor voltage."},
 
     /* Controller utilities */
     {_cmd_controlAllocation, "getAllocatedControl", "x1 x2 x3", "Returns allocated control given state inputs."},
@@ -80,6 +85,56 @@ enum {CMD_TABLE_SIZE = sizeof(cmd_table)/sizeof(CMD_T)};
 enum {CMD_MAX_TOKENS = 5};      // Maximum number of tokens to process (command + arguments)
 
 // Command function definitions
+
+static int _parseMotor(const char *name, Motor *motor)
+{
+    if (strcmp(name, "left") == 0) {
+        *motor = MOTOR_LEFT;
+    } else if (strcmp(name, "right") == 0) {
+        *motor = MOTOR_RIGHT;
+    } else {
+        printf("Motor must be left or right\n");
+        return 0;
+    }
+    return 1;
+}
+
+static void _cmd_motorSetVoltage(int argc, char *argv[])
+{
+    if (argc != 3) {
+        printf("Usage: motorSetVoltage <left|right> <voltage_v>\n");
+        return;
+    }
+
+    Motor motor;
+    if (!_parseMotor(argv[1], &motor)) {
+        return;
+    }
+
+    char *end;
+    float voltage = strtof(argv[2], &end);
+    if (end == argv[2] || *end != '\0' || !isfinite(voltage)) {
+        printf("Voltage must be a finite number\n");
+        return;
+    }
+
+    voltage_motor_control(motor, voltage);
+}
+
+static void _cmd_motorGetVoltage(int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf("Usage: motorGetVoltage <left|right>\n");
+        return;
+    }
+
+    Motor motor;
+    if (!_parseMotor(argv[1], &motor)) {
+        return;
+    }
+
+    printf("%f\n", motor_get_voltage(motor));
+}
 
 static void _cmd_leftEncoderLog(int argc, char *argv[])
 {

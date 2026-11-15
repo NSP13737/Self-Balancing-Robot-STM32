@@ -195,8 +195,7 @@ void voltage_motor_control(Motor motor, float desired_motor_voltage) {
 
     // compensate for the motor driver's voltage drop before converting to PWM
     float voltage_magnitude = fabsf(desired_motor_voltage);
-    float voltage_pre_driver = voltage_magnitude + get_driver_v_drop(motor);
-    float duty_percent = (voltage_pre_driver / battery_voltage) * 100.0f;
+    float duty_percent = (voltage_magnitude / (battery_voltage - get_driver_v_drop(motor))) * 100.0f;
     if (duty_percent > 100.0f) duty_percent = 100.0f;
 
     motor_set_direction(motor, (desired_motor_voltage >= 0.0f) ?
