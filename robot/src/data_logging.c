@@ -16,7 +16,7 @@
 #include "controller.h"
 #include "tuning_parameters.h"
 
-#define TIMER_PERIOD_MS 5.0f // 200 Hz with a 1 kHz RTOS tick
+#define TIMER_PERIOD_MS ((float)TUNING_SAMPLE_PERIOD_MS)
 #define MOTOR_LOG_DURATION_SECONDS 3U
 #define VELOCITY_LOG_DURATION_SECONDS 5U
 #define MOTOR_SINE_LOG_DURATION_SECONDS 20U

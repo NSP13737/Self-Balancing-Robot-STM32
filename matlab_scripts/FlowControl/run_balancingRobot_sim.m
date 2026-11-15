@@ -63,7 +63,7 @@ motor.Vmin =-11.2;
 motor.Jm = 0.0339; %avged between both motors
 % Note that b left_avg is 0.09445 and b right_avg is 0.05455
 motor.b = 0.0745; %avged between both motors on both sides
-motor.Kp = 0.8;
+motor.Kp = 0.55;
 motor.set_motor_time_constant();
 
 %% Cart Pole control
@@ -129,7 +129,6 @@ for i = 1:length(t_sim)-1
     %% Get control input from LQR
     if ~PIL_bool
         desired_vel = controllerBalancingRobot.control(x0.');
-        desired_vel = 15;
         z_state = controllerBalancingRobot.z;
         %% Take ideal control and put through control allocation to Voltage
         V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);

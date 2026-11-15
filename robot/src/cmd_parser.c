@@ -213,8 +213,8 @@ static void _cmd_controlAllocation(int argc, char *argv[])
     ctrl_update();
 
     
-    printf("%f\n", controlAllocation(getControl(), current_vel, 0.005f));
-    current_vel = (ctrl_get_x1() - prev_wheel_state) / 0.005f; // Scale vel by sample time
+    printf("%f\n", controlAllocation(getControl(), current_vel, TUNING_SAMPLE_PERIOD_S));
+    current_vel = (ctrl_get_x1() - prev_wheel_state) / TUNING_SAMPLE_PERIOD_S; // Scale vel by sample time
     prev_wheel_state = ctrl_get_x1();
 }
 

@@ -1,12 +1,13 @@
 #include "state_estimator.h"
 #include "IMU.h"
 #include "motor.h"
+#include "tuning_parameters.h"
 #include <stddef.h>
 
 // Momentum calculation retained for the existing controller model.
 #define A_STAR 2.8323f
 #define B_STAR -0.9681f
-#define SAMPLE_PERIOD 0.005f
+#define SAMPLE_PERIOD TUNING_SAMPLE_PERIOD_S
 
 static float get_p_theta(float ang_velo, float velo);
 

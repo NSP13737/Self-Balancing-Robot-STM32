@@ -10,7 +10,7 @@
 #include "control_allocation.h"
 #include "current_sens.h"
 
-#define SPEED_CONTROL_SAMPLE_MS 5U
+#define SPEED_CONTROL_SAMPLE_MS TUNING_SAMPLE_PERIOD_MS
 #define SPEED_CONTROL_DURATION_MS 5000U
 
 static int parse_motor(const char *name, Motor *motor)
@@ -30,7 +30,7 @@ static void run_motor_sine(Motor motor)
 {
     const uint32_t duration_ms = 20000U;
     const uint32_t period_ms = 3000U;
-    const uint32_t sample_ms = 5U;
+    const uint32_t sample_ms = TUNING_SAMPLE_PERIOD_MS;
     uint32_t start = HAL_GetTick();
 
     while ((uint32_t)(HAL_GetTick() - start) < duration_ms) {
@@ -64,7 +64,7 @@ static void run_motor_dc_stages(Motor motor)
             motor_set_direction(motor, directions[direction_index]);
             motor_set_dc(motor, duty_cycles[dc_index]);
             while ((uint32_t)(HAL_GetTick() - stage_start) < 2000U) {
-                osDelay(5U);
+                osDelay(TUNING_SAMPLE_PERIOD_MS);
             }
         }
     }
