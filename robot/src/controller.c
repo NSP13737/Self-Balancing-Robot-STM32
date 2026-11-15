@@ -96,10 +96,10 @@ float ctrl_get_z_state(void) {
 /* Get the current control output */
 float getControl(void)
 {
-    if ((ctrl_x_f32[1] > ANGLE_CUTOFF) || (ctrl_x_f32[1] < -ANGLE_CUTOFF)) {
-        return 0;
-    }
-    else return ctrl_u_f32[0];
+    // if ((ctrl_x_f32[1] > ANGLE_CUTOFF) || (ctrl_x_f32[1] < -ANGLE_CUTOFF)) {
+    //     return 0.0f;
+    // }
+    return ctrl_u_f32[0];
 }
 
 /* Update control output */
