@@ -77,4 +77,5 @@ I mean this definitely seems to help
 
 Testing some new K vals
 ![[Pasted image 20261116001543.png]]
+It seems like it underactuates near low angle values so I might just try scaling the IMU gotten params by a little bit
 

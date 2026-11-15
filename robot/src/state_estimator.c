@@ -3,6 +3,7 @@
 #include "motor.h"
 #include "tuning_parameters.h"
 #include <stddef.h>
+#include <math.h>
 
 // Momentum calculation retained for the existing controller model.
 #define A_STAR 2.8323f
@@ -10,6 +11,11 @@
 #define SAMPLE_PERIOD TUNING_SAMPLE_PERIOD_S
 
 static float get_p_theta(float ang_velo, float velo);
+
+static float imu_exponential_decay_boost(float value, float a, float k)
+{
+    return value * (1.0f + a * expf(-k * fabsf(value)));
+}
 
 static const float process_noise[3][3] = {
     { 0.2611f,  0.0223f, -0.0280f },
@@ -141,7 +147,15 @@ void get_state_estimate(float *stateMat[])
                   + get_right_motor_position_rad()) / 2.0f;
 
     IMU_read();
-    kalman_update((float)get_acc_angle(), get_gyroY(), xp);
+    float imu_angle = imu_exponential_decay_boost(
+        (float)get_acc_angle(),
+        TUNING_IMU_ANGLE_BOOST_A,
+        TUNING_IMU_ANGLE_BOOST_K);
+    float imu_gyro = imu_exponential_decay_boost(
+        get_gyroY(),
+        TUNING_IMU_GYRO_BOOST_A,
+        TUNING_IMU_GYRO_BOOST_K);
+    kalman_update(imu_angle, imu_gyro, xp);
     *stateMat[1] = xp[1];
     *stateMat[2] = get_p_theta(xp[1], xp[2]);
 
