@@ -59,4 +59,6 @@ Here I have it on the ground and am supporting it
 ![[Pasted image 20261115233320.png]]
 It doesn't seem that far off...
 
+I'm lowering the sensor noise anyway
+
 

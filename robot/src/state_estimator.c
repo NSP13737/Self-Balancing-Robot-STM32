@@ -17,8 +17,13 @@ static const float process_noise[3][3] = {
     {-0.0280f, -0.0024f,  0.0030f }
 };
 
+// static const float measurement_noise[2][2] = {
+//     {0.2492f, 0.0f},
+//     {0.0f, 2.5772e-06f}
+// };
+
 static const float measurement_noise[2][2] = {
-    {0.2492f, 0.0f},
+    {0.12f, 0.0f},
     {0.0f, 2.5772e-06f}
 };
 
