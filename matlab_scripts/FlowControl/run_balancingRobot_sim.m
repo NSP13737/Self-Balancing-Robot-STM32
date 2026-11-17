@@ -6,7 +6,7 @@ clear classDCMotor
 %% Flag: set to true/false to include/exclude the linearized simulation
 runLinearSim = false;
 
-PIL_bool = 0;
+PIL_bool = 1;
 read_integrator_z_val = 0;
 
 if PIL_bool
@@ -63,7 +63,7 @@ motor.Vmin =-11.2;
 motor.Jm = 0.0339; %avged between both motors
 % Note that b left_avg is 0.09445 and b right_avg is 0.05455
 motor.b = 0.0745; %avged between both motors on both sides
-motor.Kp = 0.55;
+motor.Kp = 0.3;
 motor.set_motor_time_constant();
 
 %% Cart Pole control
@@ -147,11 +147,15 @@ for i = 1:length(t_sim)-1
         rxStr = readline(stm_device);
         %fprintf("Step %d | rxStr: %s\n", i, rxStr);
         if ~read_integrator_z_val
-            V_in = str2double(rxStr);
+            desired_vel = str2double(rxStr);
+            %% Take ideal control and put through control allocation to Voltage
+            V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
         else
             separatedString = split(rxStr,',');
-            V_in = str2double(separatedString{1});
+            desired_vel = str2double(separatedString{1});
             z_state = str2double(separatedString{2});
+            %% Take ideal control and put through control allocation to Voltage
+            V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
 
         end
         
