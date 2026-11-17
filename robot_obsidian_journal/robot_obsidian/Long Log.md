@@ -91,5 +91,7 @@ It seems like it underactuates near low angle values so I might just try scaling
 # Improving Simulation of DC Motors
 
 - Main issue is that right now, in my simulation I am just setting the motor velocity which kind of defeats the whole purpose of running a simulation. It doesn't take into account Jm, or b
-- 
+- I am going to try to verify this change by seeing if hardcoding a set value seems similar to what real motor does
+- Initial implementation says my max motor vel is 0.4
+- ![[Pasted image 20261118000203.png]]
 

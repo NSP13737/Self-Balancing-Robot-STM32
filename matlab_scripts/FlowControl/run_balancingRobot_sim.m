@@ -109,7 +109,6 @@ res.desired_vel = 0;
 res.output_vel = 0;
 %res.desired_torque = 0;
 res.z_states = 0;
-res.debug_wheelVel = 0;
 res.voltage = 0;
 
 %% Iterative ODE solver
@@ -187,7 +186,6 @@ for i = 1:length(t_sim)-1
     res.desired_vel = [res.desired_vel; desired_vel];
     res.output_vel = [res.output_vel; output_vel];
     %res.z_states = [res.z_states; z_state];
-    res.debug_wheelVel = [res.debug_wheelVel; wheel_vel];
     res.voltage = [res.voltage; V_in];
 
 end
@@ -246,10 +244,10 @@ grid on
 
 subplot(5,1,4)
 %plot(res.t, res.t_m);
-plot(res.t, res.desired_vel, res.t, res.debug_wheelVel, '--');
+plot(res.t, res.desired_vel, res.t, res.output_vel, '--');
 hold on
 %plot(res.t, res.desired_torque, '--');
-legend('desired velocity', 'measuredWheelVel')
+legend('desired velocity', 'simulated/measured wheel vel')
 xlabel('Time [sec]')
 grid on
 
