@@ -79,6 +79,15 @@ Testing some new K vals
 ![[Pasted image 20261116001543.png]]
 It seems like it underactuates near low angle values so I might just try scaling the IMU gotten params by a little bit
 
+#### IMU KF Improvement
+- I figured out that my old val for accAngleVar derived in matlab was way too high (0.2492)
+- This stemmed from the encoder data that I collected having a negative sign relative to the other data
+- After fixing this dropped the angle variance significantly (0.0729) which will greatly speed up how quickly my angle estimate updates
+- To compare, this is what the onboard data looked like previously
+- ![[Pasted image 20261117221336.png]]
+- Now you can see in onboard_imu_kf_20261117_222453 (the new data) that the angle is much less delayed
+- ![[Pasted image 20261117222538.png]]
+
 # Improving Simulation of DC Motors
 
 - Main issue is that right now, in my simulation I am just setting the motor velocity which kind of defeats the whole purpose of running a simulation. It doesn't take into account Jm, or b

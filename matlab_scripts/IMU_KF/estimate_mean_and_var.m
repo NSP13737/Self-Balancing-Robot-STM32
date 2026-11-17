@@ -9,7 +9,7 @@ accAngle = imuData.angle;
 gyroVelocity = imuData.ang_velo;
 voltage = imuData.voltage;
 %wheelAngle = (voltage-2.125)*(240/3.3)*(pi/180); % IF USING WHEEL ENCODER
-wheelAngle = mod(voltage,4096) * (2.0 * pi / 4096.0)% IF USING SWING RIG ENCODER (AND KNOWN UPRIGHT IS 0 COUNTS)
+wheelAngle = - mod(voltage,4096) * (2.0 * pi / 4096.0)% IF USING SWING RIG ENCODER (AND KNOWN UPRIGHT IS 0 COUNTS)
 
 
 N = length(time);
@@ -30,13 +30,13 @@ encoderCounts = imuData.voltage;
 % cpr = 1320.0;
 % wheelAngle = (encoderCounts - encoderCounts(1)) * (2 * pi / cpr); % USE
 % WITH WHEEL AS ENCODER
-wheelAngle = mod(voltage,4096) * (2.0 * pi / 4096.0)% IF USING SWING RIG ENCODER (AND KNOWN UPRIGHT IS 0 COUNTS)
+wheelAngle = - mod(voltage,4096) * (2.0 * pi / 4096.0)% IF USING SWING RIG ENCODER (AND KNOWN UPRIGHT IS 0 COUNTS)
 
 N = length(time);
 
 % TODO: Correct angle offset
-wheel_angle_init = mean(wheelAngle(1:200));
-acc_angle_init = mean(accAngle(1:200));
+wheel_angle_init = wheelAngle(1);
+acc_angle_init = accAngle(1);
 wheelAngle = wheelAngle - (wheel_angle_init - acc_angle_init);
 plot(time,accAngle,time,wheelAngle)
 

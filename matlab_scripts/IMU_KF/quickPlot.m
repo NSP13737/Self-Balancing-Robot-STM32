@@ -3,7 +3,7 @@ clc
 close all
 
 % Load file (adjust file name/path as needed)
-load('swing_rig_osc_slow.mat');
+load('onboard_data/onboard_imu_kf_20261115_144148.mat');
 
 % Unpack data
 time     = imuData.time;
@@ -32,3 +32,8 @@ xlabel('Time [s]');
 grid on;
 
 linkaxes(findall(gcf, 'type', 'axes'), 'x');
+
+figure(2)
+cpr = 1320.0;
+wheelAngle = (voltage - voltage(1)) * (2 * pi / cpr);
+plot(time, wheelAngle)
