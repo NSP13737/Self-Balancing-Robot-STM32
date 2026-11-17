@@ -246,6 +246,54 @@ void imu_kf_log(int argc, char *argv[])
     logging_start(&imu_kf_log_data);
 }
 
+void read_gyro_velocity(int argc, char *argv[])
+{
+    (void)argv;
+    if (argc != 1) {
+        printf("Usage: gyroVel\n");
+        return;
+    }
+
+    IMU_read();
+    printf("%f\n", get_gyroY());
+}
+
+void read_imu_angle(int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf("Usage: imuAngle <raw|kalman>\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "raw") == 0) {
+        IMU_read();
+        printf("%f\n", (float)get_acc_angle());
+    } else if (strcmp(argv[1], "kalman") == 0) {
+        float wheel_state, angle_state, momentum_state;
+        float *state[3] = {&wheel_state, &angle_state, &momentum_state};
+        get_state_estimate(state);
+        printf("%f\n", angle_state);
+    } else {
+        printf("Angle mode must be raw or kalman\n");
+    }
+}
+
+void read_wheel_rotation(int argc, char *argv[])
+{
+    if (argc != 2) {
+        printf("Usage: wheelRotation <left|right>\n");
+        return;
+    }
+
+    if (strcmp(argv[1], "left") == 0) {
+        printf("%f\n", get_left_motor_position_rad());
+    } else if (strcmp(argv[1], "right") == 0) {
+        printf("%f\n", get_right_motor_position_rad());
+    } else {
+        printf("Wheel must be left or right\n");
+    }
+}
+
 void motor_sine_logging_start(Motor motor)
 {
     sine_log_motor = motor;
