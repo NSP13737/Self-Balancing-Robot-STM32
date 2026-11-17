@@ -201,12 +201,14 @@
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
       "bases:Create new base": false,
-      "obsidian-importer:Import notes": false,
-      "smart-composer:Open smart composer": false
+      "obsidian-importer:Import notes": false
     }
   },
   "active": "ca2c5e1e1b95fc53",
   "lastOpenFiles": [
+    "OneNoteNotes/School 2026-2027/obsidian_transfer/Inner Velocity Controller Notes/Inner Velocity Controller Notes.md",
+    "OneNoteNotes/School 2026-2027/obsidian_transfer/Inner Velocity Controller Notes/Implementation Checking.md",
+    "Long Log.md",
     "Pasted image 20261116001543.png",
     "Pasted image 20261116000231.png",
     "Pasted image 20261115235730.png",
@@ -217,10 +219,8 @@
     "Pasted image 20261115230502.png",
     "Pasted image 20261115225543.png",
     "Pasted image 20261115225344.png",
-    "Pasted image 20261115224958.png",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Implement between control allocation & motors.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Implementing LQR velo controller.md",
-    "Long Log.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Electrical SysID.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Encoder Documentation.md",
     "OneNoteNotes/2026-11-15 Microsoft OneNote import log.md",
@@ -228,8 +228,6 @@
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Initial Full Loop Testing.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Tuning System.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Free Wheel Test.md",
-    "OneNoteNotes/School 2026-2027/obsidian_transfer/Inner Velocity Controller Notes/Implementation Checking.md",
-    "OneNoteNotes/School 2026-2027/obsidian_transfer/Inner Velocity Controller Notes/Inner Velocity Controller Notes.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Inner Velocity Controller Notes",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/Modifying Assignment 3.md",
     "OneNoteNotes/School 2026-2027/obsidian_transfer/IMU Calibration Documentation.md",

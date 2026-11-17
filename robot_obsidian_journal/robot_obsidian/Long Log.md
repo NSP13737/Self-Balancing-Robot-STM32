@@ -79,3 +79,8 @@ Testing some new K vals
 ![[Pasted image 20261116001543.png]]
 It seems like it underactuates near low angle values so I might just try scaling the IMU gotten params by a little bit
 
+# Improving Simulation of DC Motors
+
+- Main issue is that right now, in my simulation I am just setting the motor velocity which kind of defeats the whole purpose of running a simulation. It doesn't take into account Jm, or b
+- 
+
