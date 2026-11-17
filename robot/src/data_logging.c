@@ -335,6 +335,10 @@ static void control_loop_log_data(void) {
     ctrl_set_x3(momentum_state);
     ctrl_update();
 
+    if ((angle_state < -ANGLE_CUTOFF) || (angle_state > ANGLE_CUTOFF)) {
+        logging_stop();
+    }
+
     float lqr_control_action = getControl();
 
     float left_wheel_vel = get_left_motor_velocity_rad_s();

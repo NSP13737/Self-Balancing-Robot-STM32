@@ -12,24 +12,15 @@
 
 static float get_p_theta(float ang_velo, float velo);
 
-static float imu_exponential_decay_boost(float value, float a, float k)
-{
-    return value * (1.0f + a * expf(-k * fabsf(value)));
-}
-
 static const float process_noise[3][3] = {
     { 0.2611f,  0.0223f, -0.0280f },
     { 0.0223f,  0.0021f, -0.0024f },
     {-0.0280f, -0.0024f,  0.0030f }
 };
 
-// static const float measurement_noise[2][2] = {
-//     {0.2492f, 0.0f},
-//     {0.0f, 2.5772e-06f}
-// };
-
+// Using updated angle variance
 static const float measurement_noise[2][2] = {
-    {0.12f, 0.0f},
+    {0.052f, 0.0f},
     {0.0f, 2.5772e-06f}
 };
 
@@ -147,15 +138,7 @@ void get_state_estimate(float *stateMat[])
                   + get_right_motor_position_rad()) / 2.0f;
 
     IMU_read();
-    float imu_angle = imu_exponential_decay_boost(
-        (float)get_acc_angle(),
-        TUNING_IMU_ANGLE_BOOST_A,
-        TUNING_IMU_ANGLE_BOOST_K);
-    float imu_gyro = imu_exponential_decay_boost(
-        get_gyroY(),
-        TUNING_IMU_GYRO_BOOST_A,
-        TUNING_IMU_GYRO_BOOST_K);
-    kalman_update(imu_angle, imu_gyro, xp);
+    kalman_update((float)get_acc_angle(), get_gyroY(), xp);
     *stateMat[1] = xp[1];
     *stateMat[2] = get_p_theta(xp[1], xp[2]);
 

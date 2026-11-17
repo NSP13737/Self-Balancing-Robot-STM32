@@ -7,8 +7,6 @@
 #define CTRL_N_INPUT 1
 #define CTRL_N_STATE 4
 
-#define ANGLE_CUTOFF 0.7f // 40deg in rads
-
 // Define control mat vals
 static float ctrl_mK_f32[CTRL_N_INPUT*CTRL_N_STATE] = 
 {
@@ -96,9 +94,6 @@ float ctrl_get_z_state(void) {
 /* Get the current control output */
 float getControl(void)
 {
-    // if ((ctrl_x_f32[1] > ANGLE_CUTOFF) || (ctrl_x_f32[1] < -ANGLE_CUTOFF)) {
-    //     return 0.0f;
-    // }
     return ctrl_u_f32[0];
 }
 

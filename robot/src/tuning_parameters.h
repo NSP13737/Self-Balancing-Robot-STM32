@@ -11,10 +11,10 @@
 #define TUNING_SAMPLE_PERIOD_S (TUNING_SAMPLE_PERIOD_MS / 1000.0f)
 
 /* Controller matrices: mK and Az are stored as row-major 1x4 arrays. */
-//#define TUNING_CTRL_MK_0 4.492148056511271f
-//#define TUNING_CTRL_MK_1 9.967726608934711f
-//#define TUNING_CTRL_MK_2 22.355953248794705f
-//#define TUNING_CTRL_MK_3 1.274592539852193f
+#define TUNING_CTRL_MK_0 4.492148056511271f
+#define TUNING_CTRL_MK_1 9.967726608934711f
+#define TUNING_CTRL_MK_2 22.355953248794705f
+#define TUNING_CTRL_MK_3 1.274592539852193f
 
 //removing integral action
 // #define TUNING_CTRL_MK_0 4.492148056511271f
@@ -28,11 +28,6 @@
 // #define TUNING_CTRL_MK_2 22.355953248794705f
 // #define TUNING_CTRL_MK_3 0.0f
 
-#define TUNING_CTRL_MK_0 0.0f
-#define TUNING_CTRL_MK_1 9.0f
-#define TUNING_CTRL_MK_2 22.0f
-#define TUNING_CTRL_MK_3 0.0f
-
 #define TUNING_CTRL_AZ_0 0.005f
 #define TUNING_CTRL_AZ_1 0.0f
 #define TUNING_CTRL_AZ_2 0.0f
@@ -44,16 +39,5 @@
 #define TUNING_Q_DIAG_2 1.0f
 #define TUNING_Q_DIAG_3 1.0f
 #define TUNING_R 0.6f
-
-/* Optional symmetric exponential IMU measurement boost:
- * f(x) = x * (1 + a * exp(-k * abs(x))).
- * Angle parameters use radians; gyro parameters use radians/second.
- * These initial values give a 50% boost at |angle|=7 deg and
- * |gyro|=1 rad/s respectively. Set a to 0.0f to disable a boost.
- */
-#define TUNING_IMU_ANGLE_BOOST_A 0.25f
-#define TUNING_IMU_ANGLE_BOOST_K 5.673f
-#define TUNING_IMU_GYRO_BOOST_A  0.25f
-#define TUNING_IMU_GYRO_BOOST_K  0.6931f
 
 #endif
