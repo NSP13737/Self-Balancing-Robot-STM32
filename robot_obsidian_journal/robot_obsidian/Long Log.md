@@ -95,3 +95,20 @@ It seems like it underactuates near low angle values so I might just try scaling
 - Initial implementation says my max motor vel is 0.4
 - ![[Pasted image 20261118000203.png]]
 
+to figure out why, I'm starting by looking at the current compared to some real world stuff
+- In the sim we obviously see that steady state current is way too high (I matched Kp to real data below)
+![[Pasted image 20261118000846.png]]
+Compare that with this old measurement
+- I avged a measured steady state sample here and got avg current of ~0.1667A
+![[Pasted image 20261118000940.png]]
+
+- This effect is being controlled by Td and Ki because to even get the motors running, Ki\*I_a needs to be greater than Td
+- I'm going to try raising my Ki to what I found online for my 12v 333rpm JGB37-520B motors
+	- Ki = 0.21
+- Manufacturers don't give a Td (static friction) value, but they give a no load amperage of 0.12 (which matches pretty well to my measured data), which when multiplied by Ki gived Td = 0.025
+- So I will use these values
+- Now I am getting a max wheel speed of abt 1.1
+- ![[Pasted image 20261118002805.png]]
+In better news the motor current seems to match what I see on the real robot
+![[Pasted image 20261118002847.png]]
+Tomorrow I will try back deriving some values from what I know the robot can actually do
