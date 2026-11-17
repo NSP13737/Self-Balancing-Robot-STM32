@@ -17,9 +17,26 @@ classdef classDCMotor < handle
     end
 
     methods
-        function dlambda = state_derivative(obj,V_in,lambda,omega_m)
-            %return the derivative of magnetic flux
+        function dx_m = motor_dynamics(obj, V_in, x_m)
+            %x_m is state [lambda; omega_m]
+            lambda = x_m(1);
+            omega_m = x_m(2);
+            
+            %electrical dynamics
             dlambda = V_in - obj.Ko*obj.N*omega_m - (obj.Ra/obj.La)*lambda;
+
+            % output torque (used for below)
+            tau_m = obj.output_torque(x_m(1)); %input lambda
+
+            % mechanical acceleration
+            domega_m = (1/obj.Jm) * (tau_m - obj.b * omega_m);
+
+            dx_m = [dlambda; domega_m];
+
+            % legacy for torque control
+        % function dlambda = state_derivative(obj,V_in,lambda,omega_m)
+        %     %return the derivative of magnetic flux
+        %     dlambda = V_in - obj.Ko*obj.N*omega_m - (obj.Ra/obj.La)*lambda;
         end
         
         function I_a = armature_current(obj,lambda)
@@ -46,7 +63,7 @@ classdef classDCMotor < handle
 
         function w_m = output_vel(obj,V_in,lambda)
 
-            w_m = (V_in - obj.Ra*obj.armature_current(lambda)) / (obj.Ko*obj.N);
+            w_m = (V_in - obj.Ra*obj.armature_current(lambda)) / (obj.Ko);
 
         end
 

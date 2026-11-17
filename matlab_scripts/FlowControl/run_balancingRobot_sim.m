@@ -6,7 +6,7 @@ clear classDCMotor
 %% Flag: set to true/false to include/exclude the linearized simulation
 runLinearSim = false;
 
-PIL_bool = 1;
+PIL_bool = 0;
 read_integrator_z_val = 0;
 
 if PIL_bool
@@ -56,7 +56,7 @@ motor.La = 0.1;
 motor.N = 30; % obvious
 motor.Td = 0.005;
 %NOTE THAT I CHANGED THIS DRASTICALLY
-motor.Ko = 0.013827; % 0.31185 avged between both motors
+motor.Ko = 0.31185; % 0.31185 avged between both motors
 motor.Ki = 0.0059; % avged between both motors
 motor.Vmax = 11.2;
 motor.Vmin =-11.2;
@@ -86,6 +86,7 @@ controllerBalancingRobot.controlInit_reference_integrator(balancingRobotLin.A(),
 %% Solve ODE
 t_sim = [0:T:10];
 x0 = [0; 3*pi/180; 0]; % [phi; theta; p_theta]
+xm0 = [0;0]; %initial motor states [lambda; omega_m]
 wheel_vel = 0;
 
 if (runLinearSim)
@@ -101,6 +102,7 @@ alpha = 0;
 res.t = t_sim(1);
 res.x = x0.';
 res.lambda = 0; 
+res.xm = xm0.';
 %res.arm_current = 0;
 %res.t_m = 0;
 res.desired_vel = 0;
@@ -114,16 +116,15 @@ res.voltage = 0;
 
 options = odeset('relTol', 1e-6);
 for i = 1:length(t_sim)-1
-    % Update estimate of wheel velo based on previous wheel pos, and newly
-    % solved wheel pos
-    wheel_vel = (res.x(end,1) - x0(1)) / T; % scale by the sampling period
+    
 
     %update states of most recent solved vals
     x0 = res.x(end,:);
     
-    lambda0 = res.lambda(end);
-    
-    t = [t_sim(i),t_sim(i+1)]; % define time to iterate one fwd
+    xm0 = res.xm(end, :)';
+    %legacy for torque control
+    %lambda0 = res.lambda(end);
+   
 
     %% NEW CODE FOR VELOCTY WITH PI CONTROL ALLOCATION
     %% Get control input from LQR
@@ -131,7 +132,7 @@ for i = 1:length(t_sim)-1
         desired_vel = controllerBalancingRobot.control(x0.');
         z_state = controllerBalancingRobot.z;
         %% Take ideal control and put through control allocation to Voltage
-        V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
+        V_in = motor.flowControlAllocation(desired_vel, xm0(2), T);
     else
         %Get control action from STM32
         if ~read_integrator_z_val
@@ -149,35 +150,38 @@ for i = 1:length(t_sim)-1
         if ~read_integrator_z_val
             desired_vel = str2double(rxStr);
             %% Take ideal control and put through control allocation to Voltage
-            V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
+            V_in = motor.flowControlAllocation(desired_vel, xm0(2), T);
         else
             separatedString = split(rxStr,',');
             desired_vel = str2double(separatedString{1});
             z_state = str2double(separatedString{2});
             %% Take ideal control and put through control allocation to Voltage
-            V_in = motor.flowControlAllocation(desired_vel, wheel_vel, T);
+            V_in = motor.flowControlAllocation(desired_vel, xm0(2), T);
 
         end
         
     end
     
-    %% Simulate motor dynamic and robot based on voltage input
-    ode_dc_motor = @(t,lambda) [motor.state_derivative(V_in, lambda, wheel_vel)]; %last element is phidot which is omega
-    [t, lambda] = ode45(ode_dc_motor, t, lambda0);
+    %% Simulate motor dynamics and robot based on voltage input
+    ode_dc_motor = @(t,xm) [motor.motor_dynamics(V_in, xm)]; 
+    [t, xm_solution] = ode45(ode_dc_motor, [t_sim(i),t_sim(i+1)], xm0);
 
     % derive output vel from new solved flux
-    output_vel = motor.output_vel(V_in, lambda(end));
+    output_vel = xm_solution(end,2);
+    %old method based on non-simulated dynamics
+    %output_vel = motor.output_vel(V_in, lambda(end));
 
 
     %ode for dynamics
     ode_robot_dynamics = @(t,x) [balancingRobot.state_derivative(x, output_vel, alpha)];
-    [t, x] = ode45(ode_robot_dynamics, t, x0, options);
+    [t, x_solution] = ode45(ode_robot_dynamics, [t_sim(i),t_sim(i+1)], x0, options);
     
 
     % append next time step solved states to our state storage
     res.t = [res.t; t(end)];
-    res.x = [res.x; x(end, :)];
-    res.lambda = [res.lambda; lambda(end)];
+    res.x = [res.x; x_solution(end, :)];
+    %res.lambda = [res.lambda; lambda(end)];
+    res.xm = [res.xm; xm_solution(end,:)]; 
     %res.arm_current = [res.arm_current; motor.armature_current(lambda(end))];
     %res.t_m = [res.t_m; t_m];
     res.desired_vel = [res.desired_vel; desired_vel];
