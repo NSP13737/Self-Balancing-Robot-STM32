@@ -4,6 +4,7 @@
 #define ANGLE_CUTOFF 0.7f // 40deg in rads
 
 void ctrl_init(void);
+void ctrl_reset_integrator(void);
 
 /* Update state vector elements. */
 void ctrl_set_x1(float x1);

@@ -404,6 +404,8 @@ void control_loop_log(int argc, char *argv[])
     control_loop_sample_count = 0;
     motor_encoder_reset_positions();
     kalman_init();
+    ctrl_reset_integrator();
+    controlAllocationResetIntegrator();
     logging_start(&control_loop_log_data);
 }
 

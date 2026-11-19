@@ -61,6 +61,12 @@ void ctrl_init(void) {
     arm_mat_init_f32(&ctrl_z, 1,1,(float32_t*)ctrl_z_f32);
 }
 
+void ctrl_reset_integrator(void)
+{
+    ctrl_z_f32[0] = 0.0f;
+    ctrl_x_f32[CTRL_N_STATE - 1] = 0.0f;
+}
+
 /* Update state vector elements */
 void ctrl_set_x1(float x1)
 {
