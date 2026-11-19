@@ -167,3 +167,23 @@ Tomorrow I will try back deriving some values from what I know the robot can act
 - This next one is werid bc it just didn't really react
 - ![[Pasted image 20261119133351.png]]
 - ![[Pasted image 20261119133401.png]]
+
+- Some issues I found
+	- State of wheel wasn't reseting between runs
+	- Some issues with not starting until certain angular velo reached
+	- Integrator wasn't being reset between runs
+![[Pasted image 20261119135922.png]]
+Basically didn't actuate here. Is angle decreasing while momentum increases? But like not at the end
+![[Pasted image 20261119140229.png]]
+This time it just didn't catch itself ^^^
+
+![[Pasted image 20261119140445.png]]
+Increased Kp but motors just didn't run until the end
+
+### Important step
+On this one it got the wheels out from under itself, but the wheels didn't change directions
+![[Pasted image 20261119140854.png]]
+![[Pasted image 20261119140927.png]]
+
+
+Okay, right now I think my issue is that I'm using the simulated optimized value of ~8 for the component of the K matrix corresponding to the wheel position. In the sim this works, because the wheels don't move very far at all, but in real life they move pretty far before the body of the robot catches up, and at that point the weight of the wheel position matters so much that it just keeps going that way, even if the wheels get under the robot

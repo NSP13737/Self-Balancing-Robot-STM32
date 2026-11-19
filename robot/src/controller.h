@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#define ANGLE_CUTOFF 0.7f // 40deg in rads
+#define ANGLE_CUTOFF 1.0f // idkdeg in rads
 
 void ctrl_init(void);
 void ctrl_reset_integrator(void);
