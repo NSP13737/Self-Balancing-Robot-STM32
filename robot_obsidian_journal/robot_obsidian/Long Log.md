@@ -146,3 +146,19 @@ Tomorrow I will try back deriving some values from what I know the robot can act
 - ![[Pasted image 20261119124009.png]]
 - That last test was actually running the control allocation twice, but I fixed it![[Pasted image 20261119124628.png]]
 - Open air test
+- Isn't working bc angle cuts off immediately
+- Running IMU log you can see imu is really low for first 3 samples
+- ```
+  0.000000,-2.356194,-0.000061,-1.000000
+0.005000,-2.356194,-0.000061,-1.000000
+0.010000,-2.356194,-0.000061,-1.000000
+0.015000,-0.020962,-0.088075,-1.000000
+0.020000,-0.029843,-0.387762,-1.000000
+0.025000,-0.020070,-0.805615,-1.000000
+0.030000,-0.026469,0.108949,-1.000000
+
+  ```
+- Now open air test
+- Fell over really quick
+- ![[Pasted image 20261119132059.png]]
+- Doing another test just to see KF angle

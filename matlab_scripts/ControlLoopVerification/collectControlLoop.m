@@ -2,14 +2,13 @@ clear
 clc
 close all
 
-% controlLoopLog emits 32 CSV fields at 200 Hz for 5 seconds.
+% controlLoopLog emits up to 32 CSV fields per sample, then an END,count marker.
 sample_period_s = 0.005;
 expected_samples = 5 / sample_period_s;
 field_count = 32;
 csv_format = [repmat('%f,', 1, field_count - 1), '%f'];
 
-% The firmware collects samples before sending them, then streams the full
-% 32-column capture. Allow the initial 5 s quiet period and the slower transfer.
+% The firmware buffers the capture, then streams the rows and an end marker.
 stm_device = serialport('COM3', 115200, 'Timeout', 10.0);
 configureTerminator(stm_device, "LF");
 cleanupObj = onCleanup(@() clear('stm_device')); %#ok<NASGU>
@@ -26,22 +25,43 @@ data = zeros(expected_samples, field_count);
 k = 0;
 t0 = tic;
 collection_timeout_s = 60.0;
+capture_complete = false;
 
-while k < expected_samples && toc(t0) < collection_timeout_s
+while ~capture_complete && toc(t0) < collection_timeout_s
     rxStr = readline(stm_device);
+
+    end_marker = regexp(char(rxStr), '^END,(\d+)$', 'tokens', 'once');
+    if ~isempty(end_marker)
+        reported_samples = str2double(end_marker{1});
+        if reported_samples ~= k
+            error('Firmware reported %d samples, but MATLAB received %d.', ...
+                reported_samples, k);
+        end
+        capture_complete = true;
+        continue;
+    end
+
     values = sscanf(char(rxStr), csv_format);
     if numel(values) ~= field_count || any(~isfinite(values))
         continue;
+    end
+    if k >= expected_samples
+        error('Received more than %d control-loop samples.', expected_samples);
     end
     k = k + 1;
     data(k, :) = values(:)';
 end
 
+if ~capture_complete
+    error('Timed out before the firmware ended the capture. Received %d samples.', k);
+end
 if k == 0
-    error('No control-loop samples received. Check the serial connection and command.');
+    error('No control-loop samples received. The angle cutoff may have triggered immediately.');
 end
 
 data = data(1:k, :);
+control_loop.sample_count = k;
+control_loop.ended_early = k < expected_samples;
 control_loop.time = data(:, 1);
 control_loop.wheel_state = data(:, 2);
 control_loop.angle_state = data(:, 3);
@@ -70,7 +90,7 @@ script_dir = fileparts(mfilename('fullpath'));
 fname = fullfile(script_dir, sprintf('control_loop_%s.mat', ...
     datestr(now, 'yyyymmdd_HHMMSS')));
 save(fname, 'control_loop');
-fprintf('Saved %d of %d expected control-loop samples to %s\n', ...
+fprintf('Saved %d of up to %d control-loop samples to %s\n', ...
     k, expected_samples, fname);
 
 clear stm_device
