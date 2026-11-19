@@ -6,7 +6,7 @@ clear classDCMotor
 %% Flag: set to true/false to include/exclude the linearized simulation
 runLinearSim = false;
 
-PIL_bool = 0;
+PIL_bool = 1;
 read_integrator_z_val = 0;
 
 if PIL_bool
@@ -54,16 +54,18 @@ motor = classDCMotor;
 motor.Ra = 7.39325; % avged between both motors
 motor.La = 0.1;
 motor.N = 30; % obvious
-motor.Td = 0.005;
-%NOTE THAT I CHANGED THIS DRASTICALLY
-motor.Ko = 0.31185; % 0.31185 avged between both motors
-motor.Ki = 0.0059; % avged between both motors
+%motor.Td = 0.005; %value estimated by lab
+motor.Td = 0.025; %value estimated from manufacuters no torque I_a and Ki val
+motor.Ko = 0.010395; % 0.31185/30 avged between both motors
+
+%motor.Ki = 0.0059; % 0.0059 avged between both motors
+motor.Ki = 0.21; %This comes from manufacturer
 motor.Vmax = 11.2;
 motor.Vmin =-11.2;
 motor.Jm = 0.0339; %avged between both motors
 % Note that b left_avg is 0.09445 and b right_avg is 0.05455
 motor.b = 0.0745; %avged between both motors on both sides
-motor.Kp = 0.3;
+motor.Kp = 0.8;
 motor.set_motor_time_constant();
 
 %% Cart Pole control
@@ -75,8 +77,7 @@ C_r = [1 0 0];
 D_r = 0;
 
 Q_int = diag([10 1 1 1])
-Q = diag([10 1 1 1]);
-R = 0.1
+R = 0.3
 N_int = zeros(4,1);
 N = zeros(4,1);
 
@@ -95,6 +96,7 @@ else
     alpha = 5*pi/180;
 end
 alpha = 0;
+%alpha = 5*pi/180;
 
 %torque
 %T = (balancingRobot.mc+balancingRobot.mw)*balancingRobot.g*balancingRobot.r*sin(alpha);
@@ -147,9 +149,13 @@ for i = 1:length(t_sim)-1
         rxStr = readline(stm_device);
         %fprintf("Step %d | rxStr: %s\n", i, rxStr);
         if ~read_integrator_z_val
-            desired_vel = str2double(rxStr);
-            %% Take ideal control and put through control allocation to Voltage
-            V_in = motor.flowControlAllocation(desired_vel, xm0(2), T);
+            % Use these lines if PIL does not include control allocation
+            % desired_vel = str2double(rxStr);
+            % %% Take ideal control and put through control allocation to Voltage
+            % V_in = motor.flowControlAllocation(desired_vel, xm0(2), T);
+            
+            desired_vel = 0;
+            V_in = str2double(rxStr);
         else
             separatedString = split(rxStr,',');
             desired_vel = str2double(separatedString{1});
@@ -287,3 +293,12 @@ end
 % figure(3)
 % plot(res.t, res.voltage)
 % ylabel("Applied Voltage")
+
+%% Motor current plot
+motor_current = res.xm(:,1) / motor.La;
+figure
+plot(res.t, motor_current)
+xlabel('Time [sec]')
+ylabel('Armature Current [A]')
+title('Motor Current')
+grid on
