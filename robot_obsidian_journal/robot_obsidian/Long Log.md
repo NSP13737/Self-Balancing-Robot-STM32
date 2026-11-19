@@ -103,6 +103,7 @@ Compare that with this old measurement
 ![[Pasted image 20261118000940.png]]
 
 - This effect is being controlled by Td and Ki because to even get the motors running, Ki\*I_a needs to be greater than Td
+- Td was never estimated and Ki could be very wrong because of static friction in the torque test
 - I'm going to try raising my Ki to what I found online for my 12v 333rpm JGB37-520B motors
 	- Ki = 0.21
 - Manufacturers don't give a Td (static friction) value, but they give a no load amperage of 0.12 (which matches pretty well to my measured data), which when multiplied by Ki gived Td = 0.025
@@ -112,3 +113,36 @@ Compare that with this old measurement
 In better news the motor current seems to match what I see on the real robot
 ![[Pasted image 20261118002847.png]]
 Tomorrow I will try back deriving some values from what I know the robot can actually do
+
+#### Next day
+- Ko and N are the predominant vars holding velocity of sim wheel back
+	- V_in = obj.Ra\*I_a + obj.Ko\*obj.N\*omega_m;
+- I figured out that in the electrical sysID script since we take velocity after the gear ratio, we can divide by the gear ratio to get the actual motor Ko
+- This takes Ko from 0.31185 to 0.010395
+- Now we get results similar to real life![[Pasted image 20261118215254.png]]
+- Now trying full sim
+- ![[Pasted image 20261118215458.png]]
+- You can actually see how it oscillates back and forth how many robots do in real life
+- I also want to check at what voltage in the sim the wheel begin to turn
+- At 0.5V
+- ![[Pasted image 20261118220242.png]]
+- At 0.7V
+- ![[Pasted image 20261118220351.png]]
+- At 0.9V
+- ![[Pasted image 20261118220421.png]]
+- It looks like it is relatively simulating the robots static friction, so I'm not going to implement a minimum voltage to the controller
+# Testing some different params for implementation
+- This has a period of over 1 sec which is a little too long for me
+![[Pasted image 20261118220654.png]]
+
+- I'll just call this one good
+- ![[Pasted image 20261118220832.png]]
+- Or this
+- ![[Pasted image 20261118221535.png]]
+
+
+## Test on robot
+- PIL LQR Test
+- ![[Pasted image 20261119124009.png]]
+- That last test was actually running the control allocation twice, but I fixed it![[Pasted image 20261119124628.png]]
+- Open air test
