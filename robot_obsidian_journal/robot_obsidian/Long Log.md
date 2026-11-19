@@ -162,3 +162,8 @@ Tomorrow I will try back deriving some values from what I know the robot can act
 - Fell over really quick
 - ![[Pasted image 20261119132059.png]]
 - Doing another test just to see KF angle
+- That file is somewhere \\_0_\/
+- But I figured out that motor positions weren't being reset so encoder count was starting really high
+- This next one is werid bc it just didn't really react
+- ![[Pasted image 20261119133351.png]]
+- ![[Pasted image 20261119133401.png]]

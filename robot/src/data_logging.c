@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <inttypes.h> // For PRIxx and SCNxx macros
+#include <math.h>
 #include "stm32f4xx_hal.h" // to import UNUSED() macro
 #include "current_sens.h"
 #include "batt_voltage.h"
@@ -24,6 +25,7 @@
 #define CONTROL_LOOP_DURATION_SECONDS 5U
 #define CONTROL_LOOP_SAMPLE_COUNT \
     (CONTROL_LOOP_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)
+#define CONTROL_LOOP_START_ANGULAR_VELOCITY_RAD_S 0.04f
 
 uint16_t logCount;
 
@@ -400,6 +402,8 @@ void control_loop_log(int argc, char *argv[])
     }
 
     control_loop_sample_count = 0;
+    motor_encoder_reset_positions();
+    kalman_init();
     logging_start(&control_loop_log_data);
 }
 
@@ -408,6 +412,12 @@ static void control_loop_log_data(void) {
     float wheel_state, angle_state, momentum_state;
     float *state[3] = {&wheel_state, &angle_state, &momentum_state};
     get_state_estimate(state);
+
+    /* Wait for a deliberate initial motion before starting control and capture. */
+    if (control_loop_sample_count == 0U &&
+        fabsf(get_kalman_angular_velocity()) < CONTROL_LOOP_START_ANGULAR_VELOCITY_RAD_S) {
+        return;
+    }
 
     /* Collect IMU info. */
     // Do not call IMU_read here; these values must match the state estimate.

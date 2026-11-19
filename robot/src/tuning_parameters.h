@@ -41,6 +41,12 @@
 #define TUNING_CTRL_MK_2 40.948f
 #define TUNING_CTRL_MK_3 1.7863f
 
+//Testing other combos
+// #define TUNING_CTRL_MK_0 3.0f
+// #define TUNING_CTRL_MK_1 18.209f
+// #define TUNING_CTRL_MK_2 40.948f
+// #define TUNING_CTRL_MK_3 1.7863f
+
 #define TUNING_CTRL_AZ_0 0.005f
 #define TUNING_CTRL_AZ_1 0.0f
 #define TUNING_CTRL_AZ_2 0.0f

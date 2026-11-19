@@ -30,6 +30,7 @@ typedef struct {
 } KalmanFilterState_t;
 
 static KalmanFilterState_t kalman_filter;
+static float kalman_angular_velocity = 0.0f;
 
 void kalman_init(void)
 {
@@ -42,6 +43,12 @@ void kalman_init(void)
             kalman_filter.Pm[row][col] = (row == col) ? 1.0f : 0.0f;
         }
     }
+    kalman_angular_velocity = 0.0f;
+}
+
+float get_kalman_angular_velocity(void)
+{
+    return kalman_angular_velocity;
 }
 
 void kalman_update(float acc_angle, float gyro_velocity, float xp[3])
@@ -139,6 +146,7 @@ void get_state_estimate(float *stateMat[])
 
     IMU_read();
     kalman_update((float)get_acc_angle(), get_gyroY(), xp);
+    kalman_angular_velocity = xp[0];
     *stateMat[1] = xp[1];
     *stateMat[2] = get_p_theta(xp[1], xp[2]);
 

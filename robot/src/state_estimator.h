@@ -10,6 +10,7 @@ void kalman_init(void);
 void kalman_update(float acc_angle, float gyro_velocity, float xp[3]);
 
 void get_state_estimate(float *stateMat[]);
+float get_kalman_angular_velocity(void);
 
 
 #endif

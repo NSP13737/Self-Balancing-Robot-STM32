@@ -337,6 +337,8 @@ void right_motor_encoder_init(void) {
 
 static volatile int32_t left_encoder_count = 0;
 static volatile int32_t right_encoder_count = 0;
+static volatile int32_t left_encoder_zero_count = 0;
+static volatile int32_t right_encoder_zero_count = 0;
 
 /* IRQs for left motor */
 void EXTI4_IRQHandler(void) {
@@ -357,15 +359,27 @@ int32_t left_motor_encoder_getValue(void) {
     return left_encoder_count;
 }
 
+void motor_encoder_reset_positions(void) {
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+    left_encoder_zero_count = left_encoder_count;
+    right_encoder_zero_count = right_encoder_count;
+    if (primask == 0U) {
+        __enable_irq();
+    }
+}
+
 float get_left_motor_position_rad(void) {
-    return left_encoder_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
+    int64_t relative_count = (int64_t)left_encoder_count - left_encoder_zero_count;
+    return (float)relative_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
 }
 
 int32_t right_motor_encoder_getValue(void) {
     return right_encoder_count;
 }
 float get_right_motor_position_rad(void) {
-    return right_encoder_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
+    int64_t relative_count = (int64_t)right_encoder_count - right_encoder_zero_count;
+    return (float)relative_count * (2.0f * MOTOR_PI) / ENCODER_COUNTS_PER_WHEEL_REV;
 }
 
 float get_left_motor_velocity_rad_s(void)
