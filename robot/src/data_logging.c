@@ -21,9 +21,8 @@
 #define VELOCITY_LOG_DURATION_SECONDS 5U
 #define MOTOR_SINE_LOG_DURATION_SECONDS 20U
 #define STATE_ESTIMATE_LOG_DURATION_SECONDS 5U
-#define CONTROL_LOOP_DURATION_SECONDS 5U
-#define CONTROL_LOOP_SAMPLE_COUNT \
-    (CONTROL_LOOP_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)
+#define CONTROL_LOOP_DURATION_SECONDS 1U
+#define CONTROL_LOOP_SAMPLE_COUNT (CONTROL_LOOP_DURATION_SECONDS * 1000U / (uint32_t)TIMER_PERIOD_MS)
 
 uint16_t logCount;
 
@@ -383,8 +382,43 @@ static void control_loop_log_data(void) {
     ctrl_set_x3(momentum_state);
     ctrl_update();
 
-    if ((angle_state < -ANGLE_CUTOFF) || (angle_state > ANGLE_CUTOFF)) {
+    if ((control_loop_sample_count > 50) && (((angle_state < -ANGLE_CUTOFF) || (angle_state > ANGLE_CUTOFF)))) {
+        
         logging_stop();
+        setRightMotorDC(0.0f);
+        setLeftMotorDC(0.0f);
+
+        /* Sampling is complete; send the buffered capture over UART now. */
+        for (uint16_t i = 0; i < control_loop_sample_count; ++i) {
+            const ControlLoopSample_t *row = &control_loop_samples[i];
+            float relative_time = ((float)TIMER_PERIOD_MS / 1000.0f) * i;
+            printf("%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,"
+                   "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+                   relative_time,
+                   row->wheel_state_mrad / 1000.0f,
+                   row->angle_state_10urad / 10000.0f,
+                   row->momentum_state_milli / 1000.0f,
+                   row->lqr_action_milli / 1000.0f,
+                   row->allocated_voltage_milli / 1000.0f,
+                   row->raw_imu_angle_10urad / 10000.0f,
+                   row->raw_imu_velocity_milli / 1000.0f,
+                   row->left_current_milli / 1000.0f,
+                   row->right_current_milli / 1000.0f,
+                   row->left_voltage_milli / 1000.0f,
+                   row->right_voltage_milli / 1000.0f,
+                   row->left_velocity_centi / 100.0f,
+                   row->right_velocity_centi / 100.0f,
+                   row->average_velocity_centi / 100.0f,
+                   row->left_encoder_mrad / 1000.0f,
+                   row->right_encoder_mrad / 1000.0f,
+                   TUNING_KP, TUNING_INTEGRATOR_SCALAR,
+                   TUNING_CTRL_MK_0, TUNING_CTRL_MK_1,
+                   TUNING_CTRL_MK_2, TUNING_CTRL_MK_3,
+                   TUNING_CTRL_AZ_0, TUNING_CTRL_AZ_1,
+                   TUNING_CTRL_AZ_2, TUNING_CTRL_AZ_3,
+                   TUNING_Q_DIAG_0, TUNING_Q_DIAG_1,
+                   TUNING_Q_DIAG_2, TUNING_Q_DIAG_3, TUNING_R);
+        }
     }
 
     float lqr_control_action = getControl();
@@ -426,6 +460,7 @@ static void control_loop_log_data(void) {
 
     control_loop_sample_count++;
     logCount++;
+    //printf("%d\n", control_loop_sample_count);
     if (control_loop_sample_count >= CONTROL_LOOP_SAMPLE_COUNT) {
         logging_stop();
         setRightMotorDC(0.0f);
